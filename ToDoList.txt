@@ -1,0 +1,24 @@
+Project To Do list:
+
+1) Define and read in parameters for the simulation                             <in progress>
+
+2) Implement movement rules for birds:
+  a) separation rule (avoid birds in close proximity)                           <not started>
+  b) alignment rule (move in same direction as neighbors)                       <not started>
+  c) cohesion rule (move towards the average position of neighbors)             <not started>
+
+3) Implement collective MPI communication between each rank
+  a) create MPI data type for sends and receives                                <not started>
+  b) collective call to pass data between ranks (likely MPI_Allgather)          <not started>
+
+4) Implement pThreads within MPI ranks to calculate movements concurrently      <not started>
+
+4) Implement function to output current state of the simulation                 <not started>
+
+5) Create a visualization for the simulation (probably in Python or R)          <not started>
+
+6) Design a test suite and write an sbatch file(s) for the BG/Q                 <not started>
+
+7) Run the tests on the BG/Q                                                    <not started>
+
+8) Write the report                                                             <not started>
