@@ -1,6 +1,10 @@
 Project To Do list:
 
-1) Define and read in parameters for the simulation                             <in progress>
+1) Setup Stuff
+  a) Define and read in parameters for the simulation                           <done for now, may need to add more>
+  b) Create a Struct to represent the birds                                     <done>
+  c) Create an array of birds to hold game state                                <done>
+  d) Implement general simulator loop                                           <done>
 
 2) Implement movement rules for birds:
   a) separation rule (avoid birds in close proximity)                           <not started>
@@ -13,7 +17,7 @@ Project To Do list:
 
 4) Implement pThreads within MPI ranks to calculate movements concurrently      <not started>
 
-4) Implement function to output current state of the simulation                 <not started>
+4) Implement function to output current state of the simulation                 <done, but may need to be modified based on step 5>
 
 5) Create a visualization for the simulation (probably in Python or R)          <not started>
 
@@ -22,3 +26,20 @@ Project To Do list:
 7) Run the tests on the BG/Q                                                    <not started>
 
 8) Write the report                                                             <not started>
+
+
+
+Progress:
+4/3 - Created github, simulator.c and simulator.h files
+4/7 - Runs in serial with random moves
+
+
+Next Steps:
+- Figure out parallel message passing
+- Program simulation rules
+
+
+Current Bugs:
+- I've seen negative grid positions, seems to be an issue with the wrap-around,
+  currently using modulus division to try to force it between [0, universe_size),
+  probably will need some kind of logic instead...
