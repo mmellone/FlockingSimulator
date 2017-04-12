@@ -1,0 +1,12 @@
+#!/bin/bash
+
+DIR=$(pwd)
+PROGRAM="simulator"
+
+RANKS=1
+
+if [ "$1" ]; then
+   RANKS=$1
+fi
+
+mpirun -N $RANKS "$DIR/$PROGRAM"
