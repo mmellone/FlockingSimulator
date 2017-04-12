@@ -7,26 +7,19 @@
  * Written by: Kevin O'Neill and Mitchell Mellone
  * Due: 2 May 2017
 */
-
-/* Imports */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <mpi.h>
-#include <time.h>
 #include "simulator.h"
 
 int main(int argc, char **argv) {
   /* Declare local variables */
-  int sim_time, birds_per_rank;
-  int start_index, end_index; /* Start/End of *birds that this rank is responsible for */
+  int sim_time;
+  //int start_index, end_index; /* Start/End of *birds that this rank is responsible for */
   Bird *birds; /* Array to hold ALL birds in simulation */
-  int commsize, myrank, i;
-
+  int i;
+  
   /* Start MPI */
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &commsize);
-  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  MPI_Comm_rank(MPI_COMM_WORLD, &commrank);
 
   /* Initialize all parameters to defaults */
   universe_size = UNIVERSE_SIZE_DEFAULT;
@@ -42,23 +35,27 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
+  /* Define an MPI_Datatype for the Bird struct */
+  MPI_Type_contiguous(7, MPI_INT, &MPI_Bird);
+  MPI_Type_commit(&MPI_Bird);
+  
   /* Create birds */
   birds_per_rank = num_birds / commsize;
-  start_index = birds_per_rank * myrank;
-  end_index = start_index + birds_per_rank; /* End index is exclusive */
-  birds = malloc(num_birds * sizeof(Bird));
-
+  //start_index = birds_per_rank * commrank;
+  //end_index = start_index + birds_per_rank; /* End index is exclusive */
+  birds = malloc(birds_per_rank * sizeof(Bird));
+  int start_id = birds_per_rank * commrank;
   /*
   * TODO import birds from input file rather than just randomly generate
   */
-  for (i = start_index; i < end_index; i++) {
+  for (i = 0; i < birds_per_rank; i++) {
     int x, y;
-    Direction d;
+    int d;
     x = rand() % universe_size;
     y = rand() % universe_size;
     d = (rand() % 8) * 45;
     birds[i] = (Bird) {
-      .id = i,
+      .id = start_id + i,
       .x = x, .y = y, .dir = d,
       .next_x = x, .next_y = y, .next_dir = d
     };
@@ -69,13 +66,13 @@ int main(int argc, char **argv) {
     /*
     * TODO Pass bird data between all threads (right now it only works with one rank)
     */
-    print(stdout, birds, sim_time);
+    print(stdout, birds, sim_time, 0);
 
-    for (i = start_index; i < end_index; i++) {
+    for (i = 0; i < birds_per_rank; i++) {
       /* Calculate next moves */
       decide_next_move(&birds[i]);
     }
-    for (i = start_index; i < end_index; i++) {
+    for (i = 0; i < birds_per_rank; i++) {
       /* Apply next moves after each move is calculated */
       apply_next_move(&birds[i]);
     }
@@ -92,37 +89,51 @@ void decide_next_move( Bird *b ) {
 
   b->next_dir = (rand() % 8) * 45; /* rn choose random direction */
 
-  /* Select next positions based on direction */
+  /* Select next positions based on direction */    
+  /*
   switch (b->next_dir) {
-    case N:
-      b->next_y = (b->y - 1) % universe_size;
-      break;
-    case NE:
-      b->next_x = (b->x + 1) % universe_size;
-      b->next_y = (b->y - 1) % universe_size;
-      break;
-    case E:
-      b->next_x = (b->x + 1) % universe_size;
-      break;
-    case SE:
-      b->next_x = (b->x + 1) % universe_size;
-      b->next_y = (b->y + 1) % universe_size;
-      break;
-    case S:
-      b->next_y = (b->y + 1) % universe_size;
-      break;
-    case SW:
-      b->next_x = (b->x - 1) % universe_size;
-      b->next_y = (b->y + 1) % universe_size;
-      break;
-    case W:
-      b->next_x = (b->x - 1) % universe_size;
-      break;
-    case NW:
-      b->next_x = (b->x - 1) % universe_size;
-      b->next_y = (b->y - 1) % universe_size;
-      break;
+  case N:
+    b->next_y = (b->y - 1) % universe_size;
+    break;
+  case NE:
+    b->next_x = (b->x + 1) % universe_size;
+    b->next_y = (b->y - 1) % universe_size;
+    break;
+  case E:
+    b->next_x = (b->x + 1) % universe_size;
+    break;
+  case SE:
+    b->next_x = (b->x + 1) % universe_size;
+    b->next_y = (b->y + 1) % universe_size;
+    break;
+  case S:
+    b->next_y = (b->y + 1) % universe_size;
+    break;
+  case SW:
+    b->next_x = (b->x - 1) % universe_size;
+    b->next_y = (b->y + 1) % universe_size;
+    break;
+  case W:
+    b->next_x = (b->x - 1) % universe_size;
+    break;
+  case NW:
+    b->next_x = (b->x - 1) % universe_size;
+    b->next_y = (b->y - 1) % universe_size;
+    break;
   }
+  */
+
+  /* Use trig values to calculate next position
+     (N = 0, E = 90, S = 180, W = 270)     */
+  double dx = sin(b->next_dir * DEG_TO_RAD),
+    dy = -cos(b->next_dir * DEG_TO_RAD);
+  b->next_x = (int)(b->x + dx) % universe_size;
+  b->next_y = (int)(b->y + dy) % universe_size;
+  
+  while (b->next_x < 0)
+    b->next_x += universe_size;
+  while (b->next_y < 0)
+    b->next_y += universe_size;
 }
 
 /* Applys the next move to a bird b */
@@ -132,20 +143,36 @@ void apply_next_move( Bird *b ) {
   b->dir = b->next_dir;
 }
 
-/* Prints the current state of the simulation (aka full birds vector) to the
+/*
+ * Prints the current state of the simulation (aka full birds vector) to the
  * given file.
- * This should only be called with rank 0, AFTER it has all updated information
- * from the universe in its bird vector.
-*/
-void print(FILE * fout, Bird *birds, int sim_time ) {
-  const char * dir_names[] = {"N","NE","E","SE","S","SW","W","NW"};
-  int i;
+ * This should be called from all ranks, AFTER all information is updated
+ *
+ * csv_format should be set to 1 for writing data files and 0 for logging
+ */
+void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
+  Bird* all_birds = NULL;
+  if (commrank == 0)
+    all_birds = malloc(num_birds * sizeof(Bird));
 
-  fprintf(fout, "sim_time: %d\n", sim_time);
-  for (i = 0; i < num_birds; i++) {
-    Bird *b = &birds[i];
-    fprintf(fout, "  Bird %d: pos=(%d, %d), dir=%s\n",
-            b->id, b->x, b->y, dir_names[b->dir/45]);
+  MPI_Gather(birds, birds_per_rank, MPI_Bird,
+	     all_birds, birds_per_rank, MPI_Bird,
+	     0, MPI_COMM_WORLD);
+  
+  int i;
+  if (commrank == 0) {
+    if (!csv_format)
+      fprintf(fout, "sim_time: %d\n", sim_time);
+    Bird *b;
+    for (i = 0; i < num_birds-1; i++) {
+      b = &all_birds[i];
+
+      if (csv_format)
+	fprintf(fout, "%d, %d, %d\n", b->x, b->y, b->dir);
+      else
+	fprintf(fout, "  Bird %d: pos=(%d, %d), dir=%d\n",
+		b->id, b->x, b->y, b->dir);
+    }
   }
 }
 
