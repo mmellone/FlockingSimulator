@@ -12,8 +12,8 @@ Project To Do list:
   c) cohesion rule (move towards the average position of neighbors)             <not started>
 
 3) Implement collective MPI communication between each rank
-  a) create MPI data type for sends and receives                                <not started>
-  b) collective call to pass data between ranks (likely MPI_Allgather)          <not started>
+  a) create MPI data type for sends and receives                                <done>
+  b) collective call to pass data between ranks (likely MPI_Allgather)          <done (for printing)>
 
 4) Implement pThreads within MPI ranks to calculate movements concurrently      <not started>
 
@@ -30,16 +30,12 @@ Project To Do list:
 
 
 Progress:
-4/3 - Created github, simulator.c and simulator.h files
-4/7 - Runs in serial with random moves
-
+4/3  - Created github, simulator.c and simulator.h files
+4/7  - Runs in serial with random moves
+4/12 - Added support for multiple MPI ranks, continuous coordinates,
+       and printing to CSV format, and removed negative coordinate bug
 
 Next Steps:
-- Figure out parallel message passing
 - Program simulation rules
 
-
 Current Bugs:
-- I've seen negative grid positions, seems to be an issue with the wrap-around,
-  currently using modulus division to try to force it between [0, universe_size),
-  probably will need some kind of logic instead...
