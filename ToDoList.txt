@@ -8,16 +8,16 @@ Project To Do list:
 
 2) Implement movement rules for birds:
   a) separation rule (avoid birds in close proximity)                           <not started>
-  b) alignment rule (move in same direction as neighbors)                       <not started>
-  c) cohesion rule (move towards the average position of neighbors)             <not started>
+  b) alignment rule (move in same direction as neighbors)                       <done, not tested>
+  c) cohesion rule (move towards the average position of neighbors)             <done, not tested>
 
 3) Implement collective MPI communication between each rank
   a) create MPI data type for sends and receives                                <done>
-  b) collective call to pass data between ranks (likely MPI_Allgather)          <done (for printing)>
+  b) collective call to pass data between ranks (likely MPI_Allgather)          <done>
 
 4) Implement pThreads within MPI ranks to calculate movements concurrently      <not started>
 
-4) Implement function to output current state of the simulation                 <done, but may need to be modified based on step 5>
+4) Implement function to output current state of the simulation                 <done>
 
 5) Create a visualization for the simulation (probably in Python or R)          <not started>
 
@@ -34,8 +34,12 @@ Progress:
 4/7  - Runs in serial with random moves
 4/12 - Added support for multiple MPI ranks, continuous coordinates,
        and printing to CSV format, and removed negative coordinate bug
+4/13 - Updated RNG to be dependent on rank number, implemented cohesion & alignment
+     - Implemented MPI_Allgather to collect data from all ranks
+     - TODO- need visualization to test correctness
 
 Next Steps:
 - Program simulation rules
 
 Current Bugs:
+

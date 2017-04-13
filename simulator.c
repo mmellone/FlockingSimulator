@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   int sim_time;
   //int start_index, end_index; /* Start/End of *birds that this rank is responsible for */
   Bird *birds; /* Array to hold ALL birds in simulation */
-  int i;
+  int i, x, y, d;
   
   /* Start MPI */
   MPI_Init(&argc, &argv);
@@ -28,32 +28,28 @@ int main(int argc, char **argv) {
   num_threads = NUM_THREADS_DEFAULT;
 
   /* Initialize random number generator */
-  srand((unsigned) time(NULL));
-
+  srand((unsigned) time(NULL) * commrank);
+  
   /* Read in arguments, update params if needed */
   if (read_cl_args(&argc, &argv) == EXIT_FAILURE) {
     return EXIT_FAILURE;
   }
-
+  
   /* Define an MPI_Datatype for the Bird struct */
-  MPI_Type_contiguous(7, MPI_INT, &MPI_Bird);
+  MPI_Type_contiguous(BIRD_SIZE, MPI_INT, &MPI_Bird);
   MPI_Type_commit(&MPI_Bird);
   
   /* Create birds */
   birds_per_rank = num_birds / commsize;
-  //start_index = birds_per_rank * commrank;
-  //end_index = start_index + birds_per_rank; /* End index is exclusive */
   birds = malloc(birds_per_rank * sizeof(Bird));
   int start_id = birds_per_rank * commrank;
   /*
   * TODO import birds from input file rather than just randomly generate
   */
   for (i = 0; i < birds_per_rank; i++) {
-    int x, y;
-    int d;
     x = rand() % universe_size;
     y = rand() % universe_size;
-    d = (rand() % 8) * 45;
+    d = rand() % 360;
     birds[i] = (Bird) {
       .id = start_id + i,
       .x = x, .y = y, .dir = d,
@@ -61,16 +57,29 @@ int main(int argc, char **argv) {
     };
   }
 
+  /* Allocate an array to hold birds from all ranks */
+  Bird* all_birds = malloc(num_birds*sizeof(Bird));
+  if (all_birds == NULL) {
+    perror("call to malloc() failed");
+    MPI_Finalize();
+    exit(EXIT_FAILURE);
+  }
+  
   /* Run the simulation */
   for (sim_time = 0; sim_time < max_time; sim_time++) {
     /*
     * TODO Pass bird data between all threads (right now it only works with one rank)
     */
     print(stdout, birds, sim_time, 0);
-
+    
+    /* Gather all of the birds from all ranks */
+    MPI_Allgather(birds, birds_per_rank, MPI_Bird,
+		  all_birds, birds_per_rank, MPI_Bird,
+		  MPI_COMM_WORLD);
+    
     for (i = 0; i < birds_per_rank; i++) {
       /* Calculate next moves */
-      decide_next_move(&birds[i]);
+      decide_next_move(all_birds, start_id + i);
     }
     for (i = 0; i < birds_per_rank; i++) {
       /* Apply next moves after each move is calculated */
@@ -78,51 +87,40 @@ int main(int argc, char **argv) {
     }
   }
 
+
+  free(all_birds);
+  free(birds);
   MPI_Finalize();
 }
 
 /* Calculates the next move for bird b */
-void decide_next_move( Bird *b ) {
-  /*
-  * TODO implement rules of movement to select a direction
-  */
+void decide_next_move( Bird *birds, int bird_index ) {
+  Bird *b = &birds[bird_index];  
+  int i;
+  int neighbor_count;
+  double cohesion_x, cohesion_y, alignment_dir;
 
-  b->next_dir = (rand() % 8) * 45; /* rn choose random direction */
-
-  /* Select next positions based on direction */    
-  /*
-  switch (b->next_dir) {
-  case N:
-    b->next_y = (b->y - 1) % universe_size;
-    break;
-  case NE:
-    b->next_x = (b->x + 1) % universe_size;
-    b->next_y = (b->y - 1) % universe_size;
-    break;
-  case E:
-    b->next_x = (b->x + 1) % universe_size;
-    break;
-  case SE:
-    b->next_x = (b->x + 1) % universe_size;
-    b->next_y = (b->y + 1) % universe_size;
-    break;
-  case S:
-    b->next_y = (b->y + 1) % universe_size;
-    break;
-  case SW:
-    b->next_x = (b->x - 1) % universe_size;
-    b->next_y = (b->y + 1) % universe_size;
-    break;
-  case W:
-    b->next_x = (b->x - 1) % universe_size;
-    break;
-  case NW:
-    b->next_x = (b->x - 1) % universe_size;
-    b->next_y = (b->y - 1) % universe_size;
-    break;
+  /* 
+   * TODO implement separation
+   */
+  /* Calculate alignment, cohesion, and separation from neighbors */
+  for (i = 0; i < num_birds; ++i) {
+    if (commrank == 0 && i != bird_index && distance(b, &birds[i]) < NEIGHBOR_RADIUS) {
+      ++neighbor_count;
+      cohesion_x += birds[i].x;
+      cohesion_y += birds[i].y;
+      alignment_dir += birds[i].dir;
+    }
   }
-  */
+  
+  double cohesion_dir = atan(cohesion_x / cohesion_y) * DEG_TO_RAD;
+  alignment_dir = (int)(alignment_dir / neighbor_count) % 360;
 
+  /* Calculate the next direction as an avg of the 3 rules */
+  /* TODO- include separation */
+  b->next_dir = (cohesion_dir + alignment_dir) / 2;
+  
+  
   /* Use trig values to calculate next position
      (N = 0, E = 90, S = 180, W = 270)     */
   double dx = sin(b->next_dir * DEG_TO_RAD),
@@ -134,6 +132,11 @@ void decide_next_move( Bird *b ) {
     b->next_x += universe_size;
   while (b->next_y < 0)
     b->next_y += universe_size;
+}
+
+/* Calculate the distance between two Birds */
+double distance (Bird *b1, Bird* b2 ) {
+  return sqrt((b2->x - b1->x)*(b2->x - b1->x) + (b2->y - b1->y)*(b2->y - b1->y));
 }
 
 /* Applys the next move to a bird b */
@@ -152,9 +155,15 @@ void apply_next_move( Bird *b ) {
  */
 void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
   Bird* all_birds = NULL;
-  if (commrank == 0)
+  if (commrank == 0) {
     all_birds = malloc(num_birds * sizeof(Bird));
-
+    if (all_birds == NULL) {
+      perror("call to malloc() failed");
+      MPI_Finalize();
+      exit(EXIT_FAILURE);
+    }
+  }
+  
   MPI_Gather(birds, birds_per_rank, MPI_Bird,
 	     all_birds, birds_per_rank, MPI_Bird,
 	     0, MPI_COMM_WORLD);
@@ -164,7 +173,7 @@ void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
     if (!csv_format)
       fprintf(fout, "sim_time: %d\n", sim_time);
     Bird *b;
-    for (i = 0; i < num_birds-1; i++) {
+    for (i = 0; i < num_birds; i++) {
       b = &all_birds[i];
 
       if (csv_format)
@@ -173,6 +182,8 @@ void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
 	fprintf(fout, "  Bird %d: pos=(%d, %d), dir=%d\n",
 		b->id, b->x, b->y, b->dir);
     }
+
+    free(all_birds);
   }
 }
 
