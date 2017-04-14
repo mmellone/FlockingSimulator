@@ -19,7 +19,7 @@ Project To Do list:
 
 4) Implement function to output current state of the simulation                 <done>
 
-5) Create a visualization for the simulation (probably in Python or R)          <not started>
+5) Create a visualization for the simulation (probably in Python or R)          <done, but can be improved>
 
 6) Design a test suite and write an sbatch file(s) for the BG/Q                 <not started>
 
@@ -36,10 +36,10 @@ Progress:
        and printing to CSV format, and removed negative coordinate bug
 4/13 - Updated RNG to be dependent on rank number, implemented cohesion & alignment
      - Implemented MPI_Allgather to collect data from all ranks
-     - TODO- need visualization to test correctness
+     - TODO- need visualization to test correctness <done>
+4/14 - Added simple visualization R script
 
 Next Steps:
 - Program simulation rules
 
 Current Bugs:
-

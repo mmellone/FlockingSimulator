@@ -10,3 +10,4 @@ if [ "$1" ]; then
 fi
 
 mpirun -N $RANKS "$DIR/$PROGRAM"
+R < plot_birds.R --vanilla
