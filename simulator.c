@@ -15,7 +15,8 @@ int main(int argc, char **argv) {
   //int start_index, end_index; /* Start/End of *birds that this rank is responsible for */
   Bird *birds; /* Array to hold ALL birds in simulation */
   int i, x, y, d;
-  
+  FILE * output_file;
+
   /* Start MPI */
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &commsize);
@@ -29,16 +30,16 @@ int main(int argc, char **argv) {
 
   /* Initialize random number generator */
   srand((unsigned) time(NULL) * commrank);
-  
+
   /* Read in arguments, update params if needed */
   if (read_cl_args(&argc, &argv) == EXIT_FAILURE) {
     return EXIT_FAILURE;
   }
-  
+
   /* Define an MPI_Datatype for the Bird struct */
   MPI_Type_contiguous(BIRD_SIZE, MPI_INT, &MPI_Bird);
   MPI_Type_commit(&MPI_Bird);
-  
+
   /* Create birds */
   birds_per_rank = num_birds / commsize;
   birds = malloc(birds_per_rank * sizeof(Bird));
@@ -64,22 +65,24 @@ int main(int argc, char **argv) {
     MPI_Finalize();
     exit(EXIT_FAILURE);
   }
-  
+
+  output_file = fopen("simout.csv", "w");
+  fprintf(output_file, "%s", "sim_time, x, y, direction\n");
+
   /* Run the simulation */
   for (sim_time = 0; sim_time < max_time; sim_time++) {
-    /*
-    * TODO Pass bird data between all threads (right now it only works with one rank)
-    */
-    print(stdout, birds, sim_time, 0);
-    
+    /* Print to stdout in csv format */
+    print(output_file, birds, sim_time, 1);
+
     /* Gather all of the birds from all ranks */
     MPI_Allgather(birds, birds_per_rank, MPI_Bird,
 		  all_birds, birds_per_rank, MPI_Bird,
 		  MPI_COMM_WORLD);
-    
+
+
     for (i = 0; i < birds_per_rank; i++) {
       /* Calculate next moves */
-      decide_next_move(all_birds, start_id + i);
+      decide_next_move(all_birds, start_id + i, &birds[i]);
     }
     for (i = 0; i < birds_per_rank; i++) {
       /* Apply next moves after each move is calculated */
@@ -94,40 +97,46 @@ int main(int argc, char **argv) {
 }
 
 /* Calculates the next move for bird b */
-void decide_next_move( Bird *birds, int bird_index ) {
-  Bird *b = &birds[bird_index];  
+void decide_next_move( Bird *birds, int bird_index, Bird * b) {
+  // Bird *b = &birds[bird_index];
   int i;
   int neighbor_count;
   double cohesion_x, cohesion_y, alignment_dir;
 
-  /* 
+  neighbor_count = 0;
+  cohesion_x = cohesion_y = alignment_dir = 0.0;
+
+  /*
    * TODO implement separation
    */
   /* Calculate alignment, cohesion, and separation from neighbors */
   for (i = 0; i < num_birds; ++i) {
-    if (commrank == 0 && i != bird_index && distance(b, &birds[i]) < NEIGHBOR_RADIUS) {
+    if (i != bird_index && distance(b, &birds[i]) < NEIGHBOR_RADIUS) {
       ++neighbor_count;
       cohesion_x += birds[i].x;
       cohesion_y += birds[i].y;
       alignment_dir += birds[i].dir;
     }
   }
-  
+
   double cohesion_dir = atan(cohesion_x / cohesion_y) * DEG_TO_RAD;
   alignment_dir = (int)(alignment_dir / neighbor_count) % 360;
 
   /* Calculate the next direction as an avg of the 3 rules */
   /* TODO- include separation */
   b->next_dir = (cohesion_dir + alignment_dir) / 2;
-  
-  
+
+
   /* Use trig values to calculate next position
      (N = 0, E = 90, S = 180, W = 270)     */
-  double dx = sin(b->next_dir * DEG_TO_RAD),
-    dy = -cos(b->next_dir * DEG_TO_RAD);
-  b->next_x = (int)(b->x + dx) % universe_size;
-  b->next_y = (int)(b->y + dy) % universe_size;
-  
+
+  double dx =  sin(b->next_dir * DEG_TO_RAD),
+         dy = -cos(b->next_dir * DEG_TO_RAD);
+  int dx_int = dx > 0.5 ? 1 : dx < -0.5 ? -1 : 0,
+      dy_int = dy > 0.5 ? 1 : dy < -0.5 ? -1 : 0;
+  b->next_x = (b->x + dx_int) % universe_size;
+  b->next_y = (b->y + dy_int) % universe_size;
+
   while (b->next_x < 0)
     b->next_x += universe_size;
   while (b->next_y < 0)
@@ -163,11 +172,11 @@ void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
       exit(EXIT_FAILURE);
     }
   }
-  
+
   MPI_Gather(birds, birds_per_rank, MPI_Bird,
 	     all_birds, birds_per_rank, MPI_Bird,
 	     0, MPI_COMM_WORLD);
-  
+
   int i;
   if (commrank == 0) {
     if (!csv_format)
@@ -177,7 +186,7 @@ void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
       b = &all_birds[i];
 
       if (csv_format)
-	fprintf(fout, "%d, %d, %d\n", b->x, b->y, b->dir);
+	fprintf(fout, "%d, %d, %d, %d\n", sim_time, b->x, b->y, b->dir);
       else
 	fprintf(fout, "  Bird %d: pos=(%d, %d), dir=%d\n",
 		b->id, b->x, b->y, b->dir);
@@ -231,7 +240,7 @@ int read_cl_args( int * argc_p, char *** argv_p ) {
         max_time = atoi(argv[i]);
       }
     } else {
-      fprintf(stderr, "ERROR: Unrecognized argument flag %s", argv[i]);
+      fprintf(stderr, "ERROR: Unrecognized argument flag %s\n", argv[i]);
       print_help_msg();
       return EXIT_FAILURE;
     }

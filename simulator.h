@@ -27,11 +27,11 @@
 /* Default values */
 #define UNIVERSE_SIZE_DEFAULT 500
 #define NUM_BIRDS_DEFUALT 128
-#define NUM_ITERATIONS_DEFAULT 1
+#define NUM_ITERATIONS_DEFAULT 50
 #define NUM_THREADS_DEFAULT 1
 
 /* Constants */
-#define DEG_TO_RAD M_PI / 180
+#define DEG_TO_RAD (M_PI / 180)
 #define BIRD_SIZE 7
 #define NEIGHBOR_RADIUS 75
 
@@ -61,7 +61,7 @@ typedef struct Bird {
 } Bird;
 
 /* Function Declarations */
-void decide_next_move( Bird *birds, int bird_index );
+void decide_next_move( Bird *birds, int bird_index, Bird *b );
 void apply_next_move( Bird *b );
 void print( FILE * fout, Bird *birds, int sim_time, int csv_format );
 int read_cl_args( int * argc_p, char *** argv_p );
