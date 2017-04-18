@@ -145,7 +145,7 @@ void decide_next_move( Bird *birds, int bird_index, Bird * b) {
 
 /* Calculate the distance between two Birds */
 double distance (Bird *b1, Bird* b2 ) {
-  return sqrt((b2->x - b1->x)*(b2->x - b1->x) + (b2->y - b1->y)*(b2->y - b1->y));
+  return sqrt(pow(b2->x - b1->x, 2.0) + pow(b2->y - b1->y, 2.0));
 }
 
 /* Applys the next move to a bird b */
