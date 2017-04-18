@@ -12,7 +12,7 @@ sim.dat$dir_rad <- sim.dat$direction*pi/180
 sim.dat$dx <- (arrow_len*cos(sim.dat$dir_rad))
 sim.dat$dy <- (arrow_len*sin(sim.dat$dir_rad))
 
-for (time in sim_times_to_print) {
+for (time in 1 : 50) {
   print(
     ggplot(data=subset(sim.dat, sim_time==time), aes(x=x, y=y)) +
       geom_segment(aes(xend=x+dx, yend=y+dy), arrow=arrow(length = unit(arrow_point,"cm"))) +

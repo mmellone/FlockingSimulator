@@ -33,7 +33,7 @@
 /* Constants */
 #define DEG_TO_RAD (M_PI / 180)
 #define BIRD_SIZE 7
-#define NEIGHBOR_RADIUS 50
+#define NEIGHBOR_RADIUS 25
 
 /* Global Variables */
 int universe_size; /* Width/height of the universe */

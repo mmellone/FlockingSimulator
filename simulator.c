@@ -129,8 +129,7 @@ void decide_next_move( Bird *birds, int bird_index, Bird * b) {
 
   /* Use trig values to calculate next position
      (N = 0, E = 90, S = 180, W = 270)     */
-
-  double dx =  sin(b->next_dir * DEG_TO_RAD),
+  double dx = sin(b->next_dir * DEG_TO_RAD),
          dy = -cos(b->next_dir * DEG_TO_RAD);
   int dx_int = dx > 0.5 ? 1 : dx < -0.5 ? -1 : 0,
       dy_int = dy > 0.5 ? 1 : dy < -0.5 ? -1 : 0;
