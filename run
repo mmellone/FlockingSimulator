@@ -11,4 +11,4 @@ fi
 
 mpirun -N $RANKS "$DIR/$PROGRAM"
 R < plot_birds.R --vanilla
-convert Rplots.pdf Rplots.gif
+convert -delay 12x100 Rplots.pdf Rplots.gif

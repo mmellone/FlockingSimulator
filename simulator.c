@@ -97,49 +97,50 @@ int main(int argc, char **argv) {
 }
 
 /* Calculates the next move for bird b */
-void decide_next_move( Bird *birds, int bird_index, Bird * b) {
-  // Bird *b = &birds[bird_index];
+void decide_next_move(Bird *birds, int bird_index, Bird * b) {
   int i;
   int neighbor_count;
-  double cohesion_x, cohesion_y, alignment_dir;
+  double alignment_dir,
+    cohesion_x, cohesion_y,
+    separation_x, separation_y;
 
   neighbor_count = 0;
-  cohesion_x = cohesion_y = alignment_dir = 0.0;
+  alignment_dir =
+    cohesion_x = cohesion_y =
+    separation_x = separation_y = 0.0;
 
-  /*
-   * TODO implement separation
-   */
   /* Calculate alignment, cohesion, and separation from neighbors */
   for (i = 0; i < num_birds; ++i) {
     if (i != bird_index && distance(b, &birds[i]) < NEIGHBOR_RADIUS) {
       ++neighbor_count;
+      alignment_dir += birds[i].dir;
       cohesion_x += birds[i].x;
       cohesion_y += birds[i].y;
-      alignment_dir += birds[i].dir;
+      separation_x += (birds[i].x - b->x);
+      separation_y += (birds[i].y - b->y);
     }
   }
 
-  double cohesion_dir = atan(cohesion_x / cohesion_y) * DEG_TO_RAD;
-  alignment_dir = (int)(alignment_dir / neighbor_count) % 360;
-
-  /* Calculate the next direction as an avg of the 3 rules */
-  /* TODO- include separation */
-  b->next_dir = (cohesion_dir + alignment_dir) / 2;
-
-
-  /* Use trig values to calculate next position
-     (N = 0, E = 90, S = 180, W = 270)     */
-  double dx = cos(b->next_dir * DEG_TO_RAD)*10,
-    dy = sin(b->next_dir * DEG_TO_RAD)*10;
-  //int dx_int = dx > 0.5 ? 1 : dx < -0.5 ? -1 : 0,
-  //    dy_int = dy > 0.5 ? 1 : dy < -0.5 ? -1 : 0;
+  /* divide out all averages by neighbor count */
+  alignment_dir = ((int)(alignment_dir / neighbor_count) % 360) / DEG_TO_RAD;
+  cohesion_x /= neighbor_count;
+  cohesion_y /= neighbor_count;
+  separation_x = (-1 * separation_x) / neighbor_count;
+  separation_y = (-1 * separation_y) / neighbor_count;
+  
+  /* Calculate the next direction as an avg of the 3 rules */  
+  double dx = (cos(alignment_dir) + cohesion_x + separation_x) / 3,
+    dy = (sin(alignment_dir) + cohesion_y + separation_y) / 3;
+  
   b->next_x = (int)(b->x + dx) % universe_size;
-  b->next_y = (int)(b->y + dy) % universe_size;
-
+  b->next_y = (int)(b->y + dy) % universe_size; 
+  
   while (b->next_x < 0)
     b->next_x += universe_size;
   while (b->next_y < 0)
     b->next_y += universe_size;
+  
+  b->next_dir = atan((double)b->next_x / b->next_y) * DEG_TO_RAD;
 }
 
 /* Calculate the distance between two Birds */
