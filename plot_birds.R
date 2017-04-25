@@ -9,7 +9,7 @@ world_limits <- c(0, 500) # Change to match universe_size
 sim_times_to_print <- unique(sim.dat$sim_time) # Uncomment to print everything
 
 sim.dat$sim_time <- as.factor(sim.dat$sim_time)
-sim.dat$dir_rad <- sim.dat$direction*pi/180
+sim.dat$dir_rad <- sim.dat$direction
 sim.dat$dx <- (arrow_len*cos(sim.dat$dir_rad))
 sim.dat$dy <- (arrow_len*sin(sim.dat$dir_rad))
 
