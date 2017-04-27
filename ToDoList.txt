@@ -43,7 +43,9 @@ Progress:
 4/27 - Fixed directional rules, included normalization to equal effects of each rule
 4/27 - Added support for pthreads ("-p <#threads>" in the run script)
      - Rules are implemented but need some tuning to work better
-
+     - Fixed distance to account for wraparound
+     - Removed excess space in plot
+     
 Next Steps:
 - separate/smaller radius for separation
 - Tune program simulation rules

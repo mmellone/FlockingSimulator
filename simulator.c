@@ -104,7 +104,6 @@ void * run_simulation(void * start_bird_p) {
   int start_bird = *(int*)start_bird_p;
   int thread_id = start_bird / birds_per_thread;
   free(start_bird_p);
->>>>>>> 42e4bed7b8b604797763c33fa1094d77993b49fd
 
   /* Run the simulation */
   for (sim_time = 0; sim_time < max_time; sim_time++) {
@@ -119,7 +118,7 @@ void * run_simulation(void * start_bird_p) {
         all_birds, birds_per_rank, MPI_Bird,
         MPI_COMM_WORLD);
     }
-
+    
     my_pthread_barrier(pthread_barrier, num_threads);
 
     for (i = start_bird; i < start_bird + birds_per_thread; i++) {
@@ -161,12 +160,8 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
       cohesion_x += birds[i].x;  // add the position
       cohesion_y += birds[i].y;
       
-      separation_x -= (birds[i].x - b->x);
-      separation_y -= (birds[i].y - b->y);
-
-      if (isnan(alignment_x)) {
-	//printf("%f, %f, %f, %d, %d\n", alignment_x, cohesion_x, separation_x, b->x, b->y);
-      }
+      separation_x += (birds[i].x - b->x);
+      separation_y += (birds[i].y - b->y);
     }
   }
 
@@ -176,17 +171,15 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
     alignment_y /= neighbor_count;
     cohesion_x = (cohesion_x / neighbor_count) - b->x;
     cohesion_y = (cohesion_y / neighbor_count) - b->y;
-    //separation_x /= neighbor_count;
-    //separation_y /= neighbor_count;
+    separation_x /= neighbor_count;
+    separation_y /= neighbor_count;
     
     /* normalize each vector */
     normalize(&alignment_x, &alignment_y);
     normalize(&cohesion_x, &cohesion_y);
     normalize(&separation_x, &separation_y);
-    separation_x *= -1 * BIRD_SPEED;
-    separation_y *= -1 * BIRD_SPEED;
-    
-    printf("%f %f\n", separation_x, separation_y);
+    separation_x *= BIRD_SPEED;
+    separation_y *= BIRD_SPEED;
     
     /* Calculate the next direction as an avg of the 3 rules */  
     double dx = alignment_x + cohesion_x + separation_x,
@@ -210,9 +203,20 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
   b->next_y = (int)(b->y + BIRD_SPEED*sin(b->next_dir) + universe_size) % universe_size;
 }
 
-/* Calculate the distance between two Birds */
+/**
+ * Calculate the distance between two Birds
+ *  NOTE: this accounts for wraparound over edges
+ */
 double distance (Bird *b1, Bird* b2 ) {
-  return sqrt(pow(b2->x - b1->x, 2.0) + pow(b2->y - b1->y, 2.0));
+  double dx = fabs(b2->x - b1->x),
+    dy = fabs(b2->y - b1->y);
+
+  if (dx > universe_size/2.0)
+    dx = universe_size - dx;
+  if (dy > universe_size/2.0)
+    dy = universe_size - dy;
+  
+  return sqrt(dx*dx + dy*dy);  
 }
 
 /* Applys the next move to a bird b */

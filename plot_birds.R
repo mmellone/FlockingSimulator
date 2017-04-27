@@ -16,8 +16,8 @@ for (time in sim_times_to_print) {
   print(
     ggplot(data=subset(sim.dat, sim_time==time), aes(x=x, y=y)) +
       geom_segment(aes(xend=x+dx, yend=y+dy), arrow=arrow(length = unit(arrow_point,"cm"))) +
-      scale_x_continuous(limits=world_limits) +
-      scale_y_continuous(limits=world_limits) +
+      scale_x_continuous(limits=world_limits, expand=c(0, 0)) +
+      scale_y_continuous(limits=world_limits, expand=c(0,0)) +
       ggtitle( paste0("World during Simulation Time: ", time) )
   )
 }
