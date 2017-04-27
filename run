@@ -3,12 +3,33 @@
 DIR=$(pwd)
 PROGRAM="simulator"
 
+OPTIND=1
 RANKS=1
+THREADS=1
 
-if [ "$1" ]; then
-   RANKS=$1
-fi
+while getopts "hn:p:" opt; do
+    case "$opt" in
+    h)  echo "Usage: ./run -n <number of MPI ranks> -p <number of pthreads per rank>"
+        exit 0
+        ;;
+    n)  RANKS=$OPTARG
+        ;;
+    p)  THREADS=$OPTARG
+        ;;
+    esac
+done
 
-mpirun -N $RANKS "$DIR/$PROGRAM"
-R < plot_birds.R --vanilla
+shift $((OPTIND-1))
+[ "$1" = "--" ] && shift
+
+echo "Running $PROGRAM with"
+echo "  RANKS=$RANKS, THREADS=$THREADS"
+mpirun -N $RANKS "$DIR/$PROGRAM" -p $THREADS
+
+echo "Generating Plots"
+Rscript plot_birds.R --vanilla
+
+echo "Creating .gif"
 convert -delay 10x100 Rplots.pdf Rplots.gif
+
+echo "Finished!"

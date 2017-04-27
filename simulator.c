@@ -12,15 +12,18 @@
 int main(int argc, char **argv) {
   /* Declare local variables */
   int sim_time;
-  Bird *birds; /* Array to hold ALL birds in simulation */
   int i, x, y;
   float d;
-  FILE * output_file;
+  pthread_t * threads;
 
   /* Start MPI */
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &commsize);
   MPI_Comm_rank(MPI_COMM_WORLD, &commrank);
+
+  /* Initialize barrier for pthreads */
+  pthread_barrier = malloc(sizeof(my_pthread_barrier_t));
+  my_pthread_init_barrier(pthread_barrier);
 
   /* Initialize all parameters to defaults */
   universe_size = UNIVERSE_SIZE_DEFAULT;
@@ -42,6 +45,7 @@ int main(int argc, char **argv) {
 
   /* Create birds */
   birds_per_rank = num_birds / commsize;
+  birds_per_thread = birds_per_rank / num_threads;
   birds = malloc(birds_per_rank * sizeof(Bird));
   int start_id = birds_per_rank * commrank;
   /*
@@ -60,39 +64,78 @@ int main(int argc, char **argv) {
   }
 
   /* Allocate an array to hold birds from all ranks */
-  Bird* all_birds = malloc(num_birds*sizeof(Bird));
+  all_birds = malloc(num_birds*sizeof(Bird));
   if (all_birds == NULL) {
     perror("call to malloc() failed");
     MPI_Finalize();
     exit(EXIT_FAILURE);
   }
 
-  output_file = fopen("simout.csv", "w");
-  fprintf(output_file, "sim_time, x, y, direction\n");
+  if (PRINTING) {
+    output_file = fopen("simout.csv", "w");
+    fprintf(output_file, "sim_time, x, y, direction\n");
+  }
+
+  /* Spawn threads if applicable and run simulation */
+  threads = malloc((num_threads-1) * sizeof(pthread_t));
+  for (i = 0; i < num_threads-1; i++) {
+    int * start_bird = malloc(sizeof(int));
+    *start_bird = i * birds_per_thread;
+    pthread_create(&threads[i], NULL, &run_simulation, start_bird);
+  }
+  int * start_bird = malloc(sizeof(int));
+  *start_bird = (num_threads-1) * birds_per_thread;
+  run_simulation(start_bird);
+
+  for (i = 0; i < num_threads-1; i++) {
+    pthread_join(threads[i], NULL);
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  free(all_birds);
+  free(birds);
+  free(pthread_barrier);
+  MPI_Finalize();
+}
+
+void * run_simulation(void * start_bird_p) {
+  int i, sim_time;
+  int start_bird = *(int*)start_bird_p;
+  int thread_id = start_bird / birds_per_thread;
+  free(start_bird_p);
+>>>>>>> 42e4bed7b8b604797763c33fa1094d77993b49fd
 
   /* Run the simulation */
   for (sim_time = 0; sim_time < max_time; sim_time++) {
-    /* Print to stdout in csv format */
-    print(output_file, birds, sim_time, 1);
-
-    /* Gather all of the birds from all ranks */
-    MPI_Allgather(birds, birds_per_rank, MPI_Bird,
-		  all_birds, birds_per_rank, MPI_Bird,
-		  MPI_COMM_WORLD);
-    
-    for (i = 0; i < birds_per_rank; i++) {
-      /* Calculate next moves */
-      decide_next_move(all_birds, start_id + i, &birds[i]);
+    if (thread_id == 0 && PRINTING) {
+      /* Print to stdout in csv format */
+      print(output_file, birds, sim_time, 1);
     }
-    for (i = 0; i < birds_per_rank; i++) {
+
+    if (thread_id == 0) {
+      /* Gather all of the birds from all ranks */
+      MPI_Allgather(birds, birds_per_rank, MPI_Bird,
+        all_birds, birds_per_rank, MPI_Bird,
+        MPI_COMM_WORLD);
+    }
+
+    my_pthread_barrier(pthread_barrier, num_threads);
+
+    for (i = start_bird; i < start_bird + birds_per_thread; i++) {
+      /* Calculate next moves */
+      decide_next_move(all_birds, start_bird + i, &birds[i]);
+    }
+
+    my_pthread_barrier(pthread_barrier, num_threads);
+    for (i = start_bird; i < start_bird + birds_per_thread; i++) {
       /* Apply next moves after each move is calculated */
       apply_next_move(&birds[i]);
     }
+
+    my_pthread_barrier(pthread_barrier, num_threads);
   }
-  
-  free(all_birds);
-  free(birds);
-  MPI_Finalize();
+  return NULL;
 }
 
 /* Calculates the next move for bird b */
@@ -100,14 +143,14 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
   int i;
   int neighbor_count;
   double alignment_dir, alignment_x, alignment_y,
-    cohesion_x, cohesion_y,
-    separation_x, separation_y;
+         cohesion_x, cohesion_y,
+         separation_x, separation_y;
 
   neighbor_count = 0;
   alignment_x = alignment_y =
     cohesion_x = cohesion_y =
     separation_x = separation_y = 0.0;
-  
+
   /* Calculate alignment, cohesion, and separation from neighbors */
   for (i = 0; i < num_birds; ++i) {
     if (i != bird_index && distance(b, &birds[i]) < NEIGHBOR_RADIUS) {
@@ -200,10 +243,10 @@ void normalize(double *x, double *y) {
  * csv_format should be set to 1 for writing data files and 0 for logging
  */
 void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
-  Bird* all_birds = NULL;
+  Bird* birds_to_print = NULL;
   if (commrank == 0) {
-    all_birds = malloc(num_birds * sizeof(Bird));
-    if (all_birds == NULL) {
+    birds_to_print = malloc(num_birds * sizeof(Bird));
+    if (birds_to_print == NULL) {
       perror("call to malloc() failed");
       MPI_Finalize();
       exit(EXIT_FAILURE);
@@ -211,16 +254,17 @@ void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
   }
 
   MPI_Gather(birds, birds_per_rank, MPI_Bird,
-	     all_birds, birds_per_rank, MPI_Bird,
-	     0, MPI_COMM_WORLD);
+	           birds_to_print, birds_per_rank, MPI_Bird,
+	           0, MPI_COMM_WORLD);
 
   int i;
   if (commrank == 0) {
-    if (!csv_format)
+    if (!csv_format) {
       fprintf(fout, "sim_time: %d\n", sim_time);
+    }
     Bird *b;
     for (i = 0; i < num_birds; i++) {
-      b = &all_birds[i];
+      b = &birds_to_print[i];
 
       if (csv_format)
 	fprintf(fout, "%d, %d, %d, %f\n", sim_time, b->x, b->y, b->dir);
@@ -229,7 +273,7 @@ void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
 		b->id, b->x, b->y, b->dir);
     }
 
-    free(all_birds);
+    free(birds_to_print);
   }
 }
 
@@ -295,4 +339,23 @@ void print_help_msg( void ) {
              "number of birds - ", NUM_BIRDS_DEFUALT,
              "number of sim iterations - ", NUM_ITERATIONS_DEFAULT,
              "number of threads per MPI rank - ", NUM_THREADS_DEFAULT);
+}
+
+/* Pthread barrier functions, taken from 3/21 lecture notes */
+void my_pthread_init_barrier(my_pthread_barrier_t *b) {
+  b->count = 0;
+  pthread_mutex_init(&(b->count_lock), NULL);
+  pthread_cond_init(&(b->ok_to_proceed), NULL);
+}
+
+void my_pthread_barrier (my_pthread_barrier_t *b, int num_threads) {
+  pthread_mutex_lock(&(b -> count_lock));
+  b->count++;
+  if (b->count == num_threads) {
+    b->count = 0;
+    pthread_cond_broadcast(&(b->ok_to_proceed));
+  }
+  else
+    while (0 != pthread_cond_wait(&(b->ok_to_proceed), &(b->count_lock)));
+  pthread_mutex_unlock(&(b->count_lock));
 }
