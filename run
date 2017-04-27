@@ -7,8 +7,11 @@ OPTIND=1
 RANKS=1
 THREADS=1
 
-while getopts "n:p:" opt; do
+while getopts "hn:p:" opt; do
     case "$opt" in
+    h)  echo "Usage: ./run -n <number of MPI ranks> -p <number of pthreads per rank>"
+        exit 0
+        ;;
     n)  RANKS=$OPTARG
         ;;
     p)  THREADS=$OPTARG
