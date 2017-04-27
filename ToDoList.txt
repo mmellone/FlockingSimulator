@@ -7,7 +7,7 @@ Project To Do list:
   d) Implement general simulator loop                                           <done>
 
 2) Implement movement rules for birds:
-  a) separation rule (avoid birds in close proximity)                           <not started>
+  a) separation rule (avoid birds in close proximity)                           <may need modification>
   b) alignment rule (move in same direction as neighbors)                       <may need modification>
   c) cohesion rule (move towards the average position of neighbors)             <may need modification>
 
@@ -40,9 +40,10 @@ Progress:
 4/14 - Added simple visualization R script
      - Fixed bug where 'decide_next_move' was updating elements in 'all_birds' instead of 'birds'
      - A few other miscellaneous fixes
+4/27 - Fixed directional rules, included normalization to equal effects of each rule
 
 Next Steps:
-- Program simulation rules
+- separate/smaller radius for separation
 
 Current Bugs:
-- Current alignment and cohesion rules point all birds in the same direction...
+- some "missing values" in the R script

@@ -13,7 +13,8 @@ int main(int argc, char **argv) {
   /* Declare local variables */
   int sim_time;
   Bird *birds; /* Array to hold ALL birds in simulation */
-  int i, x, y, d;
+  int i, x, y;
+  float d;
   FILE * output_file;
 
   /* Start MPI */
@@ -49,7 +50,8 @@ int main(int argc, char **argv) {
   for (i = 0; i < birds_per_rank; i++) {
     x = rand() % universe_size;
     y = rand() % universe_size;
-    d = rand() % 360;
+    d = (rand() % (int)(M_PI * 100000)) / 100000;
+
     birds[i] = (Bird) {
       .id = start_id + i,
       .x = x, .y = y, .dir = d,
@@ -66,7 +68,7 @@ int main(int argc, char **argv) {
   }
 
   output_file = fopen("simout.csv", "w");
-  fprintf(output_file, "%s", "sim_time, x, y, direction\n");
+  fprintf(output_file, "sim_time, x, y, direction\n");
 
   /* Run the simulation */
   for (sim_time = 0; sim_time < max_time; sim_time++) {
@@ -102,8 +104,7 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
     separation_x, separation_y;
 
   neighbor_count = 0;
-  //alignment_x = alignment_y =
-  alignment_dir =
+  alignment_x = alignment_y =
     cohesion_x = cohesion_y =
     separation_x = separation_y = 0.0;
   
@@ -111,40 +112,59 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
   for (i = 0; i < num_birds; ++i) {
     if (i != bird_index && distance(b, &birds[i]) < NEIGHBOR_RADIUS) {
       ++neighbor_count;
-      //alignment_dir += birds[i].dir;
-      alignment_x += 10*cos(birds[i].dir);
-      alignment_y += 10*sin(birds[i].dir);
+      alignment_x += BIRD_SPEED*cos(birds[i].dir);  // add the expected movement
+      alignment_y += BIRD_SPEED*sin(birds[i].dir);
 
-      cohesion_x += birds[i].x;
+      cohesion_x += birds[i].x;  // add the position
       cohesion_y += birds[i].y;
-      separation_x += (birds[i].x - b->x);
-      separation_y += (birds[i].y - b->y);
+      
+      separation_x -= (birds[i].x - b->x);
+      separation_y -= (birds[i].y - b->y);
+
+      if (isnan(alignment_x)) {
+	//printf("%f, %f, %f, %d, %d\n", alignment_x, cohesion_x, separation_x, b->x, b->y);
+      }
     }
   }
 
-  /* divide out all averages by neighbor count */
-  //alignment_dir = ((int)(alignment_dir / neighbor_count) % 360);
-  alignment_x /= neighbor_count;
-  alignment_y /= neighbor_count;
-  cohesion_x /= neighbor_count;
-  cohesion_y /= neighbor_count;
-  separation_x = (-1 * separation_x) / neighbor_count;
-  separation_y = (-1 * separation_y) / neighbor_count;
-  
-  /* Calculate the next direction as an avg of the 3 rules */  
-  double dx = (alignment_x + cohesion_x + separation_x) / 3,
-    dy = (alignment_y + cohesion_y + separation_y) / 3,
-    x = b->x + dx,
-    y = b->y + dy;
+  if (neighbor_count > 0) {
+    /* divide out all averages by neighbor count */
+    alignment_x /= neighbor_count;
+    alignment_y /= neighbor_count;
+    cohesion_x = (cohesion_x / neighbor_count) - b->x;
+    cohesion_y = (cohesion_y / neighbor_count) - b->y;
+    //separation_x /= neighbor_count;
+    //separation_y /= neighbor_count;
     
-  while (x < 0)
-    x += universe_size;
-  while (y < 0)
-    y += universe_size;
-  
-  b->next_dir = atan(x / y);
-  b->next_x = (int)(b->x + 10*cos(b->next_dir)) % universe_size;
-  b->next_y = (int)(b->y + 10*sin(b->next_dir)) % universe_size;
+    /* normalize each vector */
+    normalize(&alignment_x, &alignment_y);
+    normalize(&cohesion_x, &cohesion_y);
+    normalize(&separation_x, &separation_y);
+    separation_x *= -1 * BIRD_SPEED;
+    separation_y *= -1 * BIRD_SPEED;
+    
+    printf("%f %f\n", separation_x, separation_y);
+    
+    /* Calculate the next direction as an avg of the 3 rules */  
+    double dx = alignment_x + cohesion_x + separation_x,
+      dy = alignment_y + cohesion_y + separation_y,
+      x = b->x + dx,
+      y = b->y + dy;
+    
+    /* Make sure all values are positive */
+    while (x < 0)
+      x += universe_size;
+    while (y < 0)
+      y += universe_size;
+    
+    b->next_dir = atan(x/y);
+  } else {
+    b->next_dir = b->dir;
+  }
+
+  /* update the new position & directions */
+  b->next_x = (int)(b->x + BIRD_SPEED*cos(b->next_dir) + universe_size) % universe_size;
+  b->next_y = (int)(b->y + BIRD_SPEED*sin(b->next_dir) + universe_size) % universe_size;
 }
 
 /* Calculate the distance between two Birds */
@@ -157,6 +177,19 @@ void apply_next_move( Bird *b ) {
   b->x = b->next_x;
   b->y = b->next_y;
   b->dir = b->next_dir;
+}
+
+
+/**
+ *   Normalize a (x,y) vector to unit length
+ */
+void normalize(double *x, double *y) {
+  double length = sqrt(pow(*x, 2) + pow(*y, 2));
+
+  if (length != 0) {
+    *x /= length;
+    *y /= length;
+  }
 }
 
 /*
@@ -190,9 +223,9 @@ void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
       b = &all_birds[i];
 
       if (csv_format)
-	fprintf(fout, "%d, %d, %d, %d\n", sim_time, b->x, b->y, b->dir);
+	fprintf(fout, "%d, %d, %d, %f\n", sim_time, b->x, b->y, b->dir);
       else
-	fprintf(fout, "  Bird %d: pos=(%d, %d), dir=%d\n",
+	fprintf(fout, "  Bird %d: pos=(%d, %d), dir=%f\n",
 		b->id, b->x, b->y, b->dir);
     }
 

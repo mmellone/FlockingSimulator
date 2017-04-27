@@ -33,6 +33,7 @@
 /* Constants */
 #define DEG_TO_RAD (M_PI / 180)
 #define BIRD_SIZE 7
+#define BIRD_SPEED 10
 #define NEIGHBOR_RADIUS 20
 
 /* Global Variables */
@@ -46,18 +47,13 @@ int commrank;  /* the MPI rank of this process */
 
 MPI_Datatype MPI_Bird;  /* an MPI_Datatype for the Bird struct below */
 
-/* Struct/Enum Definitions */
-/*
-typedef enum Direction {
-  N=0, NE=45, E=90, SE=135, S=180, SW=225, W=270, NW=315
-} Direction;
-*/
+/* Struct Definitions */
 typedef struct Bird {
   int id;
   int x, y;
-  int dir;
   int next_x, next_y;
-  int next_dir;
+  float dir;
+  float next_dir;
 } Bird;
 
 /* Function Declarations */
@@ -66,5 +62,6 @@ void apply_next_move( Bird *b );
 void print( FILE * fout, Bird *birds, int sim_time, int csv_format );
 int read_cl_args( int * argc_p, char *** argv_p );
 void print_help_msg( void );
-double distance (Bird *b1, Bird* b2 );
+double distance( Bird *b1, Bird* b2 );
+void normalize( double *x, double *y );
 #endif
