@@ -21,11 +21,15 @@ Project To Do list:
 
 5) Create a visualization for the simulation (probably in Python or R)          <done, but can be improved>
 
+6) Use a cycle counter to analyze computation time vs. communication time	<not started>
+
 6) Design a test suite and write an sbatch file(s) for the BG/Q                 <not started>
 
 7) Run the tests on the BG/Q                                                    <not started>
 
-8) Write the report                                                             <not started>
+8) Literature Review								<not started>
+
+9) Write the report                                                             <not started>
 
 
 

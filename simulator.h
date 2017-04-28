@@ -28,7 +28,7 @@
 /* Default values */
 #define UNIVERSE_SIZE_DEFAULT 500
 #define NUM_BIRDS_DEFUALT 128
-#define NUM_ITERATIONS_DEFAULT 50
+#define NUM_ITERATIONS_DEFAULT 100
 #define NUM_THREADS_DEFAULT 1
 #define PRINTING 1 /* 1 enables printing, 0 disables printing */
 

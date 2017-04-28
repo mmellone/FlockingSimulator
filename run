@@ -24,7 +24,7 @@ shift $((OPTIND-1))
 
 echo "Running $PROGRAM with"
 echo "  RANKS=$RANKS, THREADS=$THREADS"
-mpirun -N $RANKS "$DIR/$PROGRAM" -p $THREADS
+time mpirun -N $RANKS "$DIR/$PROGRAM" -p $THREADS
 
 echo "Generating Plots"
 Rscript plot_birds.R --vanilla
