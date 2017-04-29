@@ -160,8 +160,8 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
       cohesion_x += birds[i].x;  // add the position
       cohesion_y += birds[i].y;
       
-      separation_x += (birds[i].x - b->x);
-      separation_y += (birds[i].y - b->y);
+      separation_x -= birds[i].x - b->x;
+      separation_y -= birds[i].y - b->y;
     }
   }
 
@@ -177,14 +177,17 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
     /* normalize each vector */
     normalize(&alignment_x, &alignment_y);
     normalize(&cohesion_x, &cohesion_y);
-    normalize(&separation_x, &separation_y);
-    separation_x *= BIRD_SPEED;
-    separation_y *= BIRD_SPEED;
+    normalize(&separation_x, &separation_y);    
     
     /* Calculate the next direction as an avg of the 3 rules */  
     double dx = alignment_x + cohesion_x + separation_x,
-      dy = alignment_y + cohesion_y + separation_y,
-      x = b->x + dx,
+      dy = alignment_y + cohesion_y + separation_y;
+
+    normalize(&dx, &dy);
+    dx *= BIRD_SPEED;
+    dy *= BIRD_SPEED;
+    
+    double x = b->x + dx,
       y = b->y + dy;
     
     /* Make sure all values are positive */
@@ -194,13 +197,18 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
       y += universe_size;
     
     b->next_dir = atan(x/y);
+
+    /* update the new position & directions */
+    b->next_x = (int)(x + universe_size) % universe_size;
+    b->next_y = (int)(y + universe_size) % universe_size;
   } else {
     b->next_dir = b->dir;
+    /* update the new position & directions */
+    b->next_x = (int)(b->x + BIRD_SPEED*cos(b->next_dir) + universe_size) % universe_size;
+    b->next_y = (int)(b->y + BIRD_SPEED*sin(b->next_dir) + universe_size) % universe_size;
   }
 
-  /* update the new position & directions */
-  b->next_x = (int)(b->x + BIRD_SPEED*cos(b->next_dir) + universe_size) % universe_size;
-  b->next_y = (int)(b->y + BIRD_SPEED*sin(b->next_dir) + universe_size) % universe_size;
+  
 }
 
 /**

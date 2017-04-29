@@ -31,12 +31,13 @@
 #define NUM_ITERATIONS_DEFAULT 100
 #define NUM_THREADS_DEFAULT 1
 #define PRINTING 1 /* 1 enables printing, 0 disables printing */
+#define BIRD_SPEED 10.0
+#define NEIGHBOR_RADIUS 50.0
 
 /* Constants */
-#define DEG_TO_RAD (M_PI / 180)
+#define DEG_TO_RAD (M_PI / 180.0)
 #define BIRD_SIZE 7
-#define BIRD_SPEED 10
-#define NEIGHBOR_RADIUS 20
+
 
 /* Struct Definitions */
 typedef struct {
