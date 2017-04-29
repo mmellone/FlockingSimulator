@@ -8,11 +8,11 @@
  * Due: 2 May 2017
 */
 
-/* NOTES:
- * - The coordinate (0, 0) is the top left corner and
- *   (universe_size, universe_size) is the bottom right corner
+/*
+ * NOTES:
+ * - The coordinate (0, 0) is the bottom left corner and
+ *   (universe_size, universe_size) is the top right corner
 */
-
 #ifndef _SIMULATOR_H_
 #define _SIMULATOR_H_
 
@@ -24,6 +24,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#ifdef BGQ
+#include <hwi/include/bqc/A2_inlines.h>
+#endif
 
 /* Default values */
 #define UNIVERSE_SIZE_DEFAULT 500
@@ -37,7 +41,7 @@
 /* Constants */
 #define DEG_TO_RAD (M_PI / 180.0)
 #define BIRD_SIZE 7
-
+#define CLOCK_RATE 1600000000
 
 /* Struct Definitions */
 typedef struct {
@@ -68,6 +72,16 @@ Bird * birds; /* Local birds in this rank */
 Bird * all_birds; /* All birds in simulation */
 FILE * output_file;
 my_pthread_barrier_t * pthread_barrier;
+
+
+/* Cycle counters/timers for MPI communication vs. computation */
+#ifdef BGQ
+unsigned long long comm_time = 0;
+unsigned long long comp_time = 0;
+#else
+double comm_time = 0.0,
+  comp_time = 0.0;
+#endif
 
 /* Function Declarations */
 void * run_simulation( void *start_bird_p );

@@ -8,8 +8,8 @@ Project To Do list:
 
 2) Implement movement rules for birds:
   a) separation rule (avoid birds in close proximity)                           <done, but need tuning>
-  b) alignment rule (move in same direction as neighbors)                       <done, but need tuning>
-  c) cohesion rule (move towards the average position of neighbors)             <done, but need tuning>
+  b) alignment rule (move in same direction as neighbors)                       <done>
+  c) cohesion rule (move towards the average position of neighbors)             <done>
 
 3) Implement collective MPI communication between each rank
   a) create MPI data type for sends and receives                                <done>
@@ -21,15 +21,15 @@ Project To Do list:
 
 5) Create a visualization for the simulation (probably in Python or R)          <done, but can be improved>
 
-6) Use a cycle counter to analyze computation time vs. communication time	<not started>
+6) Use a cycle counter to analyze computation time vs. communication time	<done>
 
-6) Design a test suite and write an sbatch file(s) for the BG/Q                 <not started>
+7) Design a test suite and write an sbatch file(s) for the BG/Q                 <done, needs revision>
 
-7) Run the tests on the BG/Q                                                    <not started>
+8) Run the tests on the BG/Q                                                    <not started>
 
-8) Literature Review								<not started>
+9) Literature Review								<not started>
 
-9) Write the report                                                             <not started>
+10) Write the report                                                            <not started>
 
 
 
@@ -49,6 +49,8 @@ Progress:
      - Rules are implemented but need some tuning to work better
      - Fixed distance to account for wraparound
      - Removed excess space in plot
+4/29 - Created BGQ run script
+     - Added timers for execution, communication, and computation
      
 Next Steps:
 - separate/smaller radius for separation

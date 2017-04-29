@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
   birds_per_thread = birds_per_rank / num_threads;
   birds = malloc(birds_per_rank * sizeof(Bird));
   int start_id = birds_per_rank * commrank;
+
   /*
   * TODO import birds from input file rather than just randomly generate
   */
@@ -76,6 +77,20 @@ int main(int argc, char **argv) {
     fprintf(output_file, "sim_time, x, y, direction\n");
   }
 
+  /* Start the global timer */
+#ifdef BGQ
+  unsigned long long start_time;
+#else
+  double start_time;
+#endif
+  if (commrank == 0) {
+#ifdef BGQ
+    start_time = GetTimeBase();
+#else
+    start_time = MPI_Wtime();
+#endif
+  }
+  
   /* Spawn threads if applicable and run simulation */
   threads = malloc((num_threads-1) * sizeof(pthread_t));
   for (i = 0; i < num_threads-1; i++) {
@@ -93,6 +108,21 @@ int main(int argc, char **argv) {
 
   MPI_Barrier(MPI_COMM_WORLD);
 
+  if (commrank == 0) {
+#ifdef BGQ
+    printf("Total time:             %f seconds\n",
+	   (double)(GetTimeBase() - start_time) / (double) CLOCK_RATE);
+    printf("Computation time:       %f seconds\n",
+	   (double)comp_time / (double) CLOCK_RATE);
+    printf("MPI Communication time: %f seconds\n",
+	   (double) comm_time / (double) CLOCK_RATE);
+#else
+    printf("Total time:             %f seconds\n", MPI_Wtime() - start_time);
+    printf("Computation time:       %f seconds\n", comp_time);
+    printf("MPI Communication time: %f seconds\n", comm_time);
+#endif
+  }
+  
   free(all_birds);
   free(birds);
   free(pthread_barrier);
@@ -105,22 +135,53 @@ void * run_simulation(void * start_bird_p) {
   int thread_id = start_bird / birds_per_thread;
   free(start_bird_p);
 
+  /* initialize start time variables */
+#ifdef BGQ
+  unsigned long long start_time;
+#else
+  double start_time;
+#endif
+  
   /* Run the simulation */
   for (sim_time = 0; sim_time < max_time; sim_time++) {
-    if (thread_id == 0 && PRINTING) {
-      /* Print to stdout in csv format */
-      print(output_file, birds, sim_time, 1);
-    }
-
     if (thread_id == 0) {
+      /* Print to stdout in csv format */
+      if (PRINTING)
+	print(output_file, birds, sim_time, 1);
+
+      /* Start the MPI timer */
+      if (commrank == 0) {
+#ifdef BGQ
+	start_time = GetTimeBase();
+#else
+	start_time = MPI_Wtime();
+#endif
+      }
+      
       /* Gather all of the birds from all ranks */
       MPI_Allgather(birds, birds_per_rank, MPI_Bird,
         all_birds, birds_per_rank, MPI_Bird,
         MPI_COMM_WORLD);
+
+      if (commrank == 0) {
+#ifdef BGQ
+	comm_time += GetTimeBase() - start_time;
+#else
+	comm_time += MPI_Wtime() - start_time;
+#endif
+      }
+    }
+
+    /* Start the MPI timer */
+    if (commrank == 0 && thread_id == 0) {
+#ifdef BGQ
+      start_time = GetTimeBase();
+#else
+      start_time = MPI_Wtime();
+#endif
     }
     
     my_pthread_barrier(pthread_barrier, num_threads);
-
     for (i = start_bird; i < start_bird + birds_per_thread; i++) {
       /* Calculate next moves */
       decide_next_move(all_birds, start_bird + i, &birds[i]);
@@ -133,6 +194,14 @@ void * run_simulation(void * start_bird_p) {
     }
 
     my_pthread_barrier(pthread_barrier, num_threads);
+
+    if (commrank == 0 && thread_id == 0) {
+#ifdef BGQ
+      comp_time += GetTimeBase() - start_time;
+#else
+      comp_time += MPI_Wtime() - start_time;
+#endif
+    }
   }
   return NULL;
 }
@@ -150,6 +219,7 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
     cohesion_x = cohesion_y =
     separation_x = separation_y = 0.0;
 
+  double dx, dy;
   /* Calculate alignment, cohesion, and separation from neighbors */
   for (i = 0; i < num_birds; ++i) {
     if (i != bird_index && distance(b, &birds[i]) < NEIGHBOR_RADIUS) {
