@@ -40,7 +40,7 @@
 
 /* Constants */
 #define DEG_TO_RAD (M_PI / 180.0)
-#define BIRD_SIZE 7
+#define BIRD_SIZE 13
 #define CLOCK_RATE 1600000000
 
 /* Struct Definitions */
@@ -52,10 +52,11 @@ typedef struct {
 
 typedef struct Bird {
   int id;
-  int x, y;
-  int next_x, next_y;
-  float dir;
-  float next_dir;
+  int x, y, z,
+    dx, dy, dz;
+  
+  int next_x, next_y, next_z,
+    next_dx, next_dy, next_dz;
 } Bird;
 MPI_Datatype MPI_Bird;  /* an MPI_Datatype for the Bird struct below */
 
@@ -92,7 +93,7 @@ int read_cl_args( int * argc_p, char *** argv_p );
 void print_help_msg( void );
 
 double distance( Bird *b1, Bird* b2 );
-void normalize( double *x, double *y );
+void normalize( double *x, double *y, double *z, double length );
 
 void my_pthread_init_barrier(my_pthread_barrier_t *b);
 void my_pthread_barrier (my_pthread_barrier_t *b, int num_threads);
