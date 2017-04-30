@@ -20,18 +20,26 @@ def main():
     minDistBetweenCenters = int(size * 0.2)
 
     for c in range(numCenters):
-        nextCenter = (randint(0, size), randint(0, size))
+        nextCenter = (randint(0, size), randint(0, size), randint(0, size))
         while distToClosestCenter(nextCenter, centers, size) < minDistBetweenCenters or closeToBoundary(nextCenter, size):
-            nextCenter = (randint(0, size), randint(0, size))
+            nextCenter = (randint(0, size), randint(0, size), randint(0, size))
         centers.append(nextCenter)
 
     fout = open(outputFileName, "w")
     for c in centers:
         for b in range(numBirds/numCenters):
+            # Create position coordinates according to a gaussian distribution around center c
             coords = map(int, tuple(randCoords(c, diameter)))
             map(lambda x: x % size, coords)
             direction = randDir(0,0)
-            birdInfo = str(coords[0])+","+str(coords[1])+","+str(direction)+"\n"
+            birdInfo = str(coords[0])+","+str(coords[1])+","+str(coords[2])
+
+            # Create a random directional vector
+            for i in range(3):
+                birdInfo += "," + str(randint(-5, 5))
+            birdInfo += "\n"
+            
+            # Print info to file
             fout.write(birdInfo)
     fout.close()
 

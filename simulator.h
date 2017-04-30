@@ -41,7 +41,7 @@
 
 /* Constants */
 #define DEG_TO_RAD (M_PI / 180.0)
-#define BIRD_SIZE 7
+#define BIRD_SIZE 13
 #define CLOCK_RATE 1600000000
 #define FILE_NAME_BUFFER_SIZE 100
 
@@ -54,10 +54,11 @@ typedef struct my_pthread_barrier_t {
 
 typedef struct Bird {
   int id;
-  int x, y;
-  int next_x, next_y;
-  float dir;
-  float next_dir;
+  int x, y, z;
+  double dx, dy, dz;
+
+  int next_x, next_y, next_z;
+  double next_dx, next_dy, next_dz;
 } Bird;
 MPI_Datatype MPI_Bird;  /* an MPI_Datatype for the Bird struct below */
 
@@ -96,10 +97,10 @@ void print_help_msg( void );
 
 void spawn_birds_file(int start_id);
 void spawn_birds_randomly(int start_id);
-void init_bird(int index, int x, int y, float dir);
+void init_bird(int start_id, int index, int x, int y, int z, double dx, double dy, double dz);
 
 double distance( Bird *b1, Bird* b2 );
-void normalize( double *x, double *y );
+void normalize( double *x, double *y, double *z, double length );
 
 void my_pthread_init_barrier(my_pthread_barrier_t *b);
 void my_pthread_barrier (my_pthread_barrier_t *b, int num_threads);
