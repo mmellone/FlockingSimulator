@@ -37,7 +37,7 @@
 #define IMPORT_FROM_FILE_DEFAULT 0
 #define PRINTING 1 /* 1 enables printing, 0 disables printing */
 #define BIRD_SPEED 10.0
-#define NEIGHBOR_RADIUS 25.0
+#define NEIGHBOR_RADIUS 50.0
 #define SEPARATION_RADIUS 25.0
 
 /* Constants */
