@@ -37,10 +37,10 @@
 #define IMPORT_FROM_FILE_DEFAULT 0
 #define PRINTING 1 /* 1 enables printing, 0 disables printing */
 #define BIRD_SPEED 10.0
-#define NEIGHBOR_RADIUS 50.0
+#define NEIGHBOR_RADIUS 25.0
+#define SEPARATION_RADIUS 25.0
 
 /* Constants */
-#define DEG_TO_RAD (M_PI / 180.0)
 #define BIRD_SIZE 10
 #define CLOCK_RATE 1600000000
 #define FILE_NAME_BUFFER_SIZE 100
@@ -98,6 +98,7 @@ void spawn_birds_randomly(int start_id);
 void init_bird(int start_id, int index, int x, int y, int z, double dx, double dy, double dz);
 
 double distance( Bird *b1, Bird* b2 );
+double delta( double d1, double d2 );
 void normalize( double *x, double *y, double *z, double length );
 
 void my_pthread_init_barrier(my_pthread_barrier_t *b);

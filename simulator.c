@@ -221,13 +221,23 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
       alignment_y += birds[i].dy;
       alignment_z += birds[i].dz;
 
-      cohesion_x += birds[i].x;  // add the position
-      cohesion_y += birds[i].y;
-      cohesion_z += birds[i].z;
-
-      separation_x -= birds[i].x - b->x;
-      separation_y -= birds[i].y - b->y;
-      separation_z -= birds[i].z - b->z;
+      cohesion_x += b->x + delta(b->x, birds[i].x);  // add the position
+      cohesion_y += b->y + delta(b->y, birds[i].y);
+      cohesion_z += b->z + delta(b->z, birds[i].z);
+      
+      // subtract the distance to the neighbor
+      double dx = delta(b->x, birds[i].x),
+	dy = delta(b->y, birds[i].y),
+	dz = delta(b->z, birds[i].z),
+	d = distance(b, &birds[i]);
+      
+      if (d > 0 && d <= SEPARATION_RADIUS) {
+	normalize(&dx, &dy, &dz, 1.0);
+	separation_x -= dx / d;
+	separation_y -= dy / d;
+	separation_z -= dz / d;
+      }
+      
     }
   }
 
@@ -266,34 +276,38 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
 }
 
 /**
+ *  Calculate the distance between two coordinates along
+ *   one axis, accounting for wraparound
+ */
+double delta( double d1, double d2 ) {
+  double delta = fabs(d2 - d1);
+  if (delta > universe_size/2.0)
+    delta = universe_size - delta;
+  return delta;
+}
+
+/**
  * Calculate the distance between two Birds
  *  NOTE: this accounts for wraparound over edges
  */
 double distance (Bird *b1, Bird* b2 ) {
-  double dx = fabs(b2->x - b1->x),
-    dy = fabs(b2->y - b1->y),
-    dz = fabs(b2->z - b1->z);
-
-  if (dx > universe_size/2.0)
-    dx = universe_size - dx;
-  if (dy > universe_size/2.0)
-    dy = universe_size - dy;
-  if (dz > universe_size/2.0)
-    dz = universe_size - dz;
-
+  double dx = delta(b2->x, b1->x),
+    dy = delta(b2->y, b1->y),
+    dz = delta(b2->z, b1->z);
+  
   return sqrt(dx*dx + dy*dy + dz*dz);
 }
 
 /* Applys the next move to a bird b */
 void apply_next_move( Bird *b ) {
-  /* update the new position */
-  b->x = (int)(b->x + b->next_dx + universe_size) % universe_size;
-  b->y = (int)(b->y + b->next_dy + universe_size) % universe_size;
-  b->z = (int)(b->z + b->next_dz + universe_size) % universe_size;
-  
   b->dx = b->next_dx;
   b->dy = b->next_dy;
   b->dz = b->next_dz;
+  
+  /* update the new position */
+  b->x = (int)(b->x + b->dx + universe_size) % universe_size;
+  b->y = (int)(b->y + b->dy + universe_size) % universe_size;
+  b->z = (int)(b->z + b->dz + universe_size) % universe_size;
 }
 
 
