@@ -81,7 +81,7 @@ else
 fi
 
 # echo "Generating Plots"
-# Rscript plot_birds.R $SIZE $STEP --vanilla
+ Rscript plot_birds.R $SIZE $STEP --vanilla
 #
 # echo "Creating .gif"
 # convert -delay 10x100 Rplots.pdf Rplots.gif

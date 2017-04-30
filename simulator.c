@@ -234,9 +234,9 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
 
   if (neighbor_count > 0) {
     /* divide out all averages by neighbor count */
-    //alignment_x /= neighbor_count;
-    //alignment_y /= neighbor_count;
-    //alignment_z /= neighbor_count;
+    alignment_x /= neighbor_count;
+    alignment_y /= neighbor_count;
+    alignment_z /= neighbor_count;
 
     cohesion_x = (cohesion_x / neighbor_count) - b->x;
     cohesion_y = (cohesion_y / neighbor_count) - b->y;
@@ -281,14 +281,17 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
  */
 double distance (Bird *b1, Bird* b2 ) {
   double dx = fabs(b2->x - b1->x),
-    dy = fabs(b2->y - b1->y);
+    dy = fabs(b2->y - b1->y),
+    dz = fabs(b2->z - b1->z);
 
   if (dx > universe_size/2.0)
     dx = universe_size - dx;
   if (dy > universe_size/2.0)
     dy = universe_size - dy;
+  if (dz > universe_size/2.0)
+    dz = universe_size - dz;
 
-  return sqrt(dx*dx + dy*dy);
+  return sqrt(dx*dx + dy*dy + dz*dz);
 }
 
 /* Applys the next move to a bird b */
@@ -315,7 +318,7 @@ void normalize(double *x, double *y, double *z, double len ) {
     *z /= length;
   }
 
-  /* Multiply vector */
+  /* Multiply vector by len */
   *x *= len;
   *y *= len;
   *y *= len;
@@ -345,9 +348,9 @@ void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
 
   int i;
   if (commrank == 0) {
-    if (!csv_format) {
+    if (!csv_format)
       fprintf(fout, "sim_time: %d\n", sim_time);
-    }
+    
     Bird *b;
     for (i = 0; i < num_birds; i++) {
       b = &birds_to_print[i];

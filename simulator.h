@@ -31,7 +31,7 @@
 
 /* Default values */
 #define UNIVERSE_SIZE_DEFAULT 500
-#define NUM_BIRDS_DEFUALT 128
+#define NUM_BIRDS_DEFUALT 16
 #define NUM_ITERATIONS_DEFAULT 100
 #define NUM_THREADS_DEFAULT 1
 #define IMPORT_FROM_FILE_DEFAULT 0
@@ -55,10 +55,10 @@ typedef struct my_pthread_barrier_t {
 typedef struct Bird {
   int id;
   int x, y, z;
-  double dx, dy, dz;
+  float dx, dy, dz;
 
   int next_x, next_y, next_z;
-  double next_dx, next_dy, next_dz;
+  float next_dx, next_dy, next_dz;
 } Bird;
 MPI_Datatype MPI_Bird;  /* an MPI_Datatype for the Bird struct below */
 
