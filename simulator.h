@@ -41,7 +41,7 @@
 
 /* Constants */
 #define DEG_TO_RAD (M_PI / 180.0)
-#define BIRD_SIZE 13
+#define BIRD_SIZE 10
 #define CLOCK_RATE 1600000000
 #define FILE_NAME_BUFFER_SIZE 100
 
@@ -54,10 +54,8 @@ typedef struct my_pthread_barrier_t {
 
 typedef struct Bird {
   int id;
-  int x, y, z;
+  float x, y, z;
   float dx, dy, dz;
-
-  int next_x, next_y, next_z;
   float next_dx, next_dy, next_dz;
 } Bird;
 MPI_Datatype MPI_Bird;  /* an MPI_Datatype for the Bird struct below */

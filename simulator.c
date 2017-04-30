@@ -31,17 +31,17 @@ int main(int argc, char **argv) {
   max_time = NUM_ITERATIONS_DEFAULT;
   num_threads = NUM_THREADS_DEFAULT;
   import_from_file = IMPORT_FROM_FILE_DEFAULT;
-
+  
   /* Initialize random number generator */
   srand((unsigned) time(NULL) * commrank);
-
+  
   /* Read in arguments, update params if needed */
   if (read_cl_args(&argc, &argv) == EXIT_FAILURE) {
     return EXIT_FAILURE;
   }
 
   /* Define an MPI_Datatype for the Bird struct */
-  MPI_Type_contiguous(BIRD_SIZE, MPI_INT, &MPI_Bird);
+  MPI_Type_contiguous(BIRD_SIZE, MPI_FLOAT, &MPI_Bird);
   MPI_Type_commit(&MPI_Bird);
 
   /* Create birds */
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
   birds_per_thread = birds_per_rank / num_threads;
   birds = malloc(birds_per_rank * sizeof(Bird));
   int start_id = birds_per_rank * commrank;
-
+  
   if (import_from_file) {
     spawn_birds_file(start_id);
   } else {
@@ -183,7 +183,7 @@ void * run_simulation(void * start_bird_p) {
 
     my_pthread_barrier(pthread_barrier, num_threads);
     for (i = start_bird; i < start_bird + birds_per_thread; i++) {
-      /* Apply next moves after each move is calculated */
+      /* Apply moves after all moves are calculated */
       apply_next_move(&birds[i]);
     }
 
@@ -213,7 +213,6 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
     cohesion_x = cohesion_y = cohesion_z =
     separation_x = separation_y = separation_z = 0.0;
 
-  double dx, dy;
   /* Calculate alignment, cohesion, and separation from neighbors */
   for (i = 0; i < num_birds; ++i) {
     if (i != bird_index && distance(b, &birds[i]) < NEIGHBOR_RADIUS) {
@@ -242,9 +241,10 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
     cohesion_y = (cohesion_y / neighbor_count) - b->y;
     cohesion_z = (cohesion_z / neighbor_count) - b->z;
 
-    //separation_x /= neighbor_count;
-    //separation_y /= neighbor_count;
-
+    separation_x /= neighbor_count;
+    separation_y /= neighbor_count;
+    separation_z /= neighbor_count;
+    
     /* normalize each vector */
     normalize(&alignment_x, &alignment_y, &alignment_z, 1.0);
     normalize(&cohesion_x, &cohesion_y, &cohesion_z, 1.0);
@@ -254,24 +254,14 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
     double dx = alignment_x + cohesion_x + separation_x,
       dy = alignment_y + cohesion_y + separation_y,
       dz = alignment_z + cohesion_z + separation_z;
-    normalize(&dx, &dy, &dz, BIRD_SPEED);
+    normalize(&dx, &dy, &dz, 10.0);
     b->next_dx = dx;
     b->next_dy = dy;
     b->next_dz = dz;
-
-    /* update the new position & directions */
-    b->next_x = (int)(b->x + b->next_dx + universe_size) % universe_size;
-    b->next_y = (int)(b->y + b->next_dy + universe_size) % universe_size;
-    b->next_z = (int)(b->z + b->next_dz + universe_size) % universe_size;
   } else {
     b->next_dx = b->dx;
     b->next_dy = b->dy;
     b->next_dz = b->dz;
-
-    /* update the new position & directions */
-    b->next_x = (int)(b->x + b->dx + universe_size) % universe_size;
-    b->next_y = (int)(b->y + b->dy + universe_size) % universe_size;
-    b->next_z = (int)(b->z + b->dz + universe_size) % universe_size;
   }
 }
 
@@ -296,9 +286,11 @@ double distance (Bird *b1, Bird* b2 ) {
 
 /* Applys the next move to a bird b */
 void apply_next_move( Bird *b ) {
-  b->x = b->next_x;
-  b->y = b->next_y;
-  b->z = b->next_z;
+  /* update the new position */
+  b->x = (int)(b->x + b->next_dx + universe_size) % universe_size;
+  b->y = (int)(b->y + b->next_dy + universe_size) % universe_size;
+  b->z = (int)(b->z + b->next_dz + universe_size) % universe_size;
+  
   b->dx = b->next_dx;
   b->dy = b->next_dy;
   b->dz = b->next_dz;
@@ -310,18 +302,19 @@ void apply_next_move( Bird *b ) {
  *    then multiply to a factor of len
  */
 void normalize(double *x, double *y, double *z, double len ) {
-  double length = sqrt((*x * *x) + (*y * *y) + (*z * *z));
-
+  double length = sqrt((*x)*(*x) + (*y)*(*y) + (*z)*(*z));
   if (length != 0) {
     *x /= length;
     *y /= length;
     *z /= length;
   }
-
+  
   /* Multiply vector by len */
-  *x *= len;
-  *y *= len;
-  *y *= len;
+  if (len != 1.0) {
+    *x *= len;
+    *y *= len;
+    *z *= len;
+  }
 }
 
 /*
@@ -356,10 +349,10 @@ void print(FILE * fout, Bird *birds, int sim_time, int csv_format) {
       b = &birds_to_print[i];
 
       if (csv_format)
-	fprintf(fout, "%d, %d, %d, %d, %f, %f, %f\n",
+	fprintf(fout, "%d, %f, %f, %f, %f, %f, %f\n",
 		sim_time, b->x, b->y, b->z, b->dx, b->dy, b->dz);
       else
-	fprintf(fout, "  Bird %d: pos=(%d, %d, %d), dir=(%f, %f, %f)\n",
+	fprintf(fout, "  Bird %d: pos=(%f, %f, %f), dir=(%f, %f, %f)\n",
 		b->id, b->x, b->y, b->z, b->dx, b->dy, b->dz);
     }
 
@@ -478,9 +471,9 @@ void spawn_birds_randomly(int start_id) {
     x = rand() % universe_size;
     y = rand() % universe_size;
     z = rand() % universe_size;
-    dx = (double) (rand() % (int) BIRD_SPEED);
-    dy = (double) (rand() % (int) BIRD_SPEED);
-    dz = (double) (rand() % (int) BIRD_SPEED);
+    dx = rand() % (int) BIRD_SPEED;
+    dy = rand() % (int) BIRD_SPEED;
+    dz = rand() % (int) BIRD_SPEED;
     normalize(&dx, &dy, &dz, BIRD_SPEED);
     init_bird(start_id, i, x, y, z, dx, dy, dz);
   }
@@ -493,7 +486,6 @@ void init_bird(int start_id, int index, int x, int y, int z, double dx, double d
     .id = start_id + index,
     .x = x, .y = y, .z = z,
     .dx = dx, .dy = dy, .dz = dz,
-    .next_x = x, .next_y = y, .next_z = z,
     .next_dx = dx, .next_dy = dy, .next_dz = dz,
   };
 }
