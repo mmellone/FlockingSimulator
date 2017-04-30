@@ -36,12 +36,11 @@
 #define NUM_THREADS_DEFAULT 1
 #define IMPORT_FROM_FILE_DEFAULT 0
 #define PRINTING 1 /* 1 enables printing, 0 disables printing */
-#define BIRD_SPEED 5.0
+#define BIRD_SPEED 10.0
 #define NEIGHBOR_RADIUS 50.0
 #define SEPARATION_RADIUS 25.0
 
 /* Constants */
-#define DEG_TO_RAD (M_PI / 180.0)
 #define BIRD_SIZE 7
 #define CLOCK_RATE 1600000000
 #define FILE_NAME_BUFFER_SIZE 100
