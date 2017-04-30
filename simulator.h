@@ -36,8 +36,9 @@
 #define NUM_THREADS_DEFAULT 1
 #define IMPORT_FROM_FILE_DEFAULT 0
 #define PRINTING 1 /* 1 enables printing, 0 disables printing */
-#define BIRD_SPEED 10.0
+#define BIRD_SPEED 5.0
 #define NEIGHBOR_RADIUS 50.0
+#define SEPARATION_RADIUS 25.0
 
 /* Constants */
 #define DEG_TO_RAD (M_PI / 180.0)
@@ -54,8 +55,8 @@ typedef struct my_pthread_barrier_t {
 
 typedef struct Bird {
   int id;
-  int x, y;
-  int next_x, next_y;
+  float x, y;
+  float next_x, next_y;
   float dir;
   float next_dir;
 } Bird;
@@ -99,6 +100,9 @@ void spawn_birds_randomly(int start_id);
 void init_bird(int index, int x, int y, float dir);
 
 double distance( Bird *b1, Bird* b2 );
+double delta( double d1, double d2 );
+
+
 void normalize( double *x, double *y );
 
 void my_pthread_init_barrier(my_pthread_barrier_t *b);
