@@ -1,12 +1,17 @@
 library(ggplot2)
 
+args <- commandArgs(TRUE)
+size <- as.integer(args[1])
+step <- as.integer(args[2])
+
 sim.dat <- read.csv("simout.csv") # Load simulation csv output
 
 arrow_len <- 10 # Length of arrow
 arrow_point <- 0.1 # Size of arrow-head
-# sim_times_to_print <- c(0, 10, 20, 30, 40, 49) # List of simulation times to plot
-world_limits <- c(0, 500) # Change to match universe_size
-sim_times_to_print <- unique(sim.dat$sim_time) # Uncomment to print everything
+max_time <- max(sim.dat$sim_time)
+sim_times_to_print <- seq(0, max_time, step) # List of simulation times to plot
+world_limits <- c(0, size) # Change to match universe_size
+# sim_times_to_print <- unique(sim.dat$sim_time) # Uncomment to print everything
 
 sim.dat$sim_time <- as.factor(sim.dat$sim_time)
 sim.dat$dx <- (arrow_len*cos(sim.dat$direction))
@@ -21,5 +26,3 @@ for (time in sim_times_to_print) {
       ggtitle( paste0("World during Simulation Time: ", time) )
   )
 }
-
-warnings()

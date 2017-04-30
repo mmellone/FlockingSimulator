@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
   num_birds = NUM_BIRDS_DEFUALT;
   max_time = NUM_ITERATIONS_DEFAULT;
   num_threads = NUM_THREADS_DEFAULT;
+  import_from_file = IMPORT_FROM_FILE_DEFAULT;
 
   /* Initialize random number generator */
   srand((unsigned) time(NULL) * commrank);
@@ -49,19 +50,16 @@ int main(int argc, char **argv) {
   birds = malloc(birds_per_rank * sizeof(Bird));
   int start_id = birds_per_rank * commrank;
 
-  /*
-  * TODO import birds from input file rather than just randomly generate
-  */
-  for (i = 0; i < birds_per_rank; i++) {
-    x = rand() % universe_size;
-    y = rand() % universe_size;
-    d = (rand() % (int)(M_PI * 100000)) / 100000;
+  // for (i = 0; i < birds_per_rank; i++) {
+  //   x = rand() % universe_size;
+  //   y = rand() % universe_size;
+  //   d = (rand() % (int)(M_PI * 100000)) / 100000;
+  // }
 
-    birds[i] = (Bird) {
-      .id = start_id + i,
-      .x = x, .y = y, .dir = d,
-      .next_x = x, .next_y = y, .next_dir = d
-    };
+  if (import_from_file) {
+    spawn_birds_file(start_id);
+  } else {
+    spawn_birds_randomly(start_id);
   }
 
   /* Allocate an array to hold birds from all ranks */
@@ -72,6 +70,7 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
 
+  /* Set up printing */
   if (PRINTING) {
     output_file = fopen("simout.csv", "w");
     fprintf(output_file, "sim_time, x, y, direction\n");
@@ -90,7 +89,7 @@ int main(int argc, char **argv) {
     start_time = MPI_Wtime();
 #endif
   }
-  
+
   /* Spawn threads if applicable and run simulation */
   threads = malloc((num_threads-1) * sizeof(pthread_t));
   for (i = 0; i < num_threads-1; i++) {
@@ -122,12 +121,13 @@ int main(int argc, char **argv) {
     printf("MPI Communication time: %f seconds\n", comm_time);
 #endif
   }
-  
+
   free(all_birds);
   free(birds);
   free(pthread_barrier);
   MPI_Finalize();
 }
+
 
 void * run_simulation(void * start_bird_p) {
   int i, sim_time;
@@ -141,7 +141,7 @@ void * run_simulation(void * start_bird_p) {
 #else
   double start_time;
 #endif
-  
+
   /* Run the simulation */
   for (sim_time = 0; sim_time < max_time; sim_time++) {
     if (thread_id == 0) {
@@ -157,7 +157,7 @@ void * run_simulation(void * start_bird_p) {
 	start_time = MPI_Wtime();
 #endif
       }
-      
+
       /* Gather all of the birds from all ranks */
       MPI_Allgather(birds, birds_per_rank, MPI_Bird,
         all_birds, birds_per_rank, MPI_Bird,
@@ -180,7 +180,7 @@ void * run_simulation(void * start_bird_p) {
       start_time = MPI_Wtime();
 #endif
     }
-    
+
     my_pthread_barrier(pthread_barrier, num_threads);
     for (i = start_bird; i < start_bird + birds_per_thread; i++) {
       /* Calculate next moves */
@@ -229,7 +229,7 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
 
       cohesion_x += birds[i].x;  // add the position
       cohesion_y += birds[i].y;
-      
+
       separation_x -= birds[i].x - b->x;
       separation_y -= birds[i].y - b->y;
     }
@@ -243,29 +243,29 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
     cohesion_y = (cohesion_y / neighbor_count) - b->y;
     separation_x /= neighbor_count;
     separation_y /= neighbor_count;
-    
+
     /* normalize each vector */
     normalize(&alignment_x, &alignment_y);
     normalize(&cohesion_x, &cohesion_y);
-    normalize(&separation_x, &separation_y);    
-    
-    /* Calculate the next direction as an avg of the 3 rules */  
+    normalize(&separation_x, &separation_y);
+
+    /* Calculate the next direction as an avg of the 3 rules */
     double dx = alignment_x + cohesion_x + separation_x,
       dy = alignment_y + cohesion_y + separation_y;
 
     normalize(&dx, &dy);
     dx *= BIRD_SPEED;
     dy *= BIRD_SPEED;
-    
+
     double x = b->x + dx,
       y = b->y + dy;
-    
+
     /* Make sure all values are positive */
     while (x < 0)
       x += universe_size;
     while (y < 0)
       y += universe_size;
-    
+
     b->next_dir = atan(x/y);
 
     /* update the new position & directions */
@@ -278,7 +278,7 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
     b->next_y = (int)(b->y + BIRD_SPEED*sin(b->next_dir) + universe_size) % universe_size;
   }
 
-  
+
 }
 
 /**
@@ -293,8 +293,8 @@ double distance (Bird *b1, Bird* b2 ) {
     dx = universe_size - dx;
   if (dy > universe_size/2.0)
     dy = universe_size - dy;
-  
-  return sqrt(dx*dx + dy*dy);  
+
+  return sqrt(dx*dx + dy*dy);
 }
 
 /* Applys the next move to a bird b */
@@ -402,6 +402,8 @@ int read_cl_args( int * argc_p, char *** argv_p ) {
         i++;
         max_time = atoi(argv[i]);
       }
+    } else if (strcmp(argv[i], "-f") == 0) {
+      import_from_file = 1;
     } else {
       fprintf(stderr, "ERROR: Unrecognized argument flag %s\n", argv[i]);
       print_help_msg();
@@ -415,12 +417,71 @@ int read_cl_args( int * argc_p, char *** argv_p ) {
 /* Prints a help message to stdout */
 void print_help_msg( void ) {
   printf("%s\n  %s\n    %s%d\n    %s%d\n    %s%d\n    %s%d\n",
-         "Usage: ./a.out -s <size of universe> -b <number of birds> -t <number of sim iterations> -p <number of threads>",
+         "Usage: ./a.out -s <size of universe> -b <number of birds> -t <number of sim iterations> -p <number of threads> -f (indicates to initialize birds from input file)",
            "Default Values:",
              "universe size - ", UNIVERSE_SIZE_DEFAULT,
              "number of birds - ", NUM_BIRDS_DEFUALT,
              "number of sim iterations - ", NUM_ITERATIONS_DEFAULT,
              "number of threads per MPI rank - ", NUM_THREADS_DEFAULT);
+}
+
+/* Spawns birds according to a File "rank_<ranknum>.birds"
+   The file MUST have one bird per line in the format:
+   x,y,direction
+   These files can be generated by calling generateBirds.py
+*/
+void spawn_birds_file(int start_id) {
+  // Have the first rank parse the input file
+  int i, n, x, y;
+  float dir;
+  char input_file_name[FILE_NAME_BUFFER_SIZE];
+  FILE * fin;
+
+  /* Init local vars to parse file */
+  snprintf(input_file_name, FILE_NAME_BUFFER_SIZE, "rank_%d.birds", commrank);
+  fin = fopen(input_file_name, "r");
+  if (fin == NULL) {
+    fprintf(stderr, "Can't open file %s\n", input_file_name);
+    MPI_Finalize;
+    exit(EXIT_FAILURE);
+  }
+
+  for (i = 0; i < birds_per_rank; i++) {
+    n = fscanf(fin, "%d,%d,%f\n", &x, &y, &dir);
+    if (n < 3) {
+      fprintf(stderr, "File Read Error: %s\n  iteration: %d\n", input_file_name, i);
+      init_bird(i, 1, 1, 1.0);
+      perror("  Error msg");
+      MPI_Finalize;
+      exit(EXIT_FAILURE);
+    } else {
+      init_bird(i, x, y, dir);
+    }
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void spawn_birds_randomly(int start_id) {
+  int i, x, y;
+  float dir;
+
+  for (i = 0; i < birds_per_rank; i++) {
+    x = rand() % universe_size;
+    y = rand() % universe_size;
+    dir = (rand() % (int)(M_PI * 100000)) / 100000;
+    init_bird(i, x, y, dir);
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void init_bird(int index, int x, int y, float dir) {
+  birds[index] = (Bird) {
+    .id = index,
+    .x = x, .y = y, .dir = dir,
+    .next_x = x, .next_y = y, .next_dir = dir
+  };
 }
 
 /* Pthread barrier functions, taken from 3/21 lecture notes */

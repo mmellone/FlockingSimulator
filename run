@@ -4,17 +4,43 @@ DIR=$(pwd)
 PROGRAM="simulator"
 
 OPTIND=1
+BIRDS=512
+FILE=""
+CLUSTERS=0
 RANKS=1
 THREADS=1
+SIZE=500
+STEP=1
+TIME=100
 
-while getopts "hn:p:" opt; do
+while getopts "hb:f:g:i:n:p:s:t:" opt; do
     case "$opt" in
-    h)  echo "Usage: ./run -n <number of MPI ranks> -p <number of pthreads per rank>"
+    h)  echo "Usage: ./run [options]"
+        echo "             -b <number of birds to simulate>"
+        echo "             -f <file with bird info>"
+        echo "             -g <number of bird groups to create> (0 uses a uniform random distribution)"
+        echo "             -i <step size, which iterations to show graphs for"
+        echo "             -n <number of MPI ranks>"
+        echo "             -p <number of pthreads per rank>"
+        echo "             -s <size of the universe>"
+        echo "             -t <number of iterations>"
         exit 0
+        ;;
+    b)  BIRDS=$OPTARG
+        ;;
+    f)  FILE=$OPTARG
+        ;;
+    g)  CLUSTERS=$OPTARG
+        ;;
+    i)  STEP=$OPTARG
         ;;
     n)  RANKS=$OPTARG
         ;;
     p)  THREADS=$OPTARG
+        ;;
+    s)  SIZE=$OPTARG
+        ;;
+    t)  TIME=$OPTARG
         ;;
     esac
 done
@@ -22,14 +48,46 @@ done
 shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
-echo "Running $PROGRAM with"
-echo "  RANKS=$RANKS, THREADS=$THREADS"
-mpirun -N $RANKS "$DIR/$PROGRAM" -p $THREADS
+echo groups = $CLUSTERS
+
+if [ $CLUSTERS == 0 ]
+then
+  # Run the simulation with a uniform random distribution of birds
+  echo "Running $PROGRAM with"
+  echo "  RANKS=$RANKS, THREADS=$THREADS"
+  mpirun -N $RANKS "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+else
+  # Use n groups of birds
+  if [ "$FILE" == "" ]
+  then
+    # Generate birds if not provided with file
+    echo "Generating Birds"
+    python generateBirds.py $CLUSTERS $SIZE $BIRDS all.birds
+    FILE="all.birds"
+  fi
+
+  # Split birds up into a single input file per rank
+  echo "Splitting Birds into separate input files"
+  python splitInputFile.py $FILE $RANKS
+
+  # Run the simulation
+  echo "Running $PROGRAM with"
+  echo "  RANKS=$RANKS, THREADS=$THREADS"
+  mpirun -N $RANKS "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME -f
+
+  # Clean up
+  echo "Cleaning up input files"
+  rm *.birds
+fi
 
 echo "Generating Plots"
-Rscript plot_birds.R --vanilla
+Rscript plot_birds.R $SIZE $STEP --vanilla
 
 echo "Creating .gif"
 convert -delay 10x100 Rplots.pdf Rplots.gif
+
+echo "Cleaning up"
+rm simout.csv
+rm Rplots.pdf
 
 echo "Finished!"

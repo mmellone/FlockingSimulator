@@ -34,6 +34,7 @@
 #define NUM_BIRDS_DEFUALT 128
 #define NUM_ITERATIONS_DEFAULT 100
 #define NUM_THREADS_DEFAULT 1
+#define IMPORT_FROM_FILE_DEFAULT 0
 #define PRINTING 1 /* 1 enables printing, 0 disables printing */
 #define BIRD_SPEED 10.0
 #define NEIGHBOR_RADIUS 50.0
@@ -42,9 +43,10 @@
 #define DEG_TO_RAD (M_PI / 180.0)
 #define BIRD_SIZE 7
 #define CLOCK_RATE 1600000000
+#define FILE_NAME_BUFFER_SIZE 100
 
 /* Struct Definitions */
-typedef struct {
+typedef struct my_pthread_barrier_t {
   pthread_mutex_t count_lock;
   pthread_cond_t ok_to_proceed;
   int count;
@@ -66,6 +68,7 @@ int birds_per_rank; /* Number of birds simulated by each rank */
 int birds_per_thread;
 int max_time;
 int num_threads; /* Number of threads per mpi process */
+int import_from_file; /* 1 to import initial bird positions from file, 0 to randomly init */
 int commsize;  /* the number of MPI Ranks */
 int commrank;  /* the MPI rank of this process */
 Bird * birds; /* Local birds in this rank */
@@ -90,6 +93,10 @@ void apply_next_move( Bird *b );
 void print( FILE * fout, Bird *birds, int sim_time, int csv_format );
 int read_cl_args( int * argc_p, char *** argv_p );
 void print_help_msg( void );
+
+void spawn_birds_file(int start_id);
+void spawn_birds_randomly(int start_id);
+void init_bird(int index, int x, int y, float dir);
 
 double distance( Bird *b1, Bird* b2 );
 void normalize( double *x, double *y );
