@@ -8,3 +8,7 @@ simulator
 .RData
 *.aux
 *.log
+*-blx.bib
+*.bbl
+*.blg
+*.run.xml
