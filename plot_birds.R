@@ -1,28 +1,23 @@
-require("scatterplot3d")
-library(scatterplot3d)
+library(rgl)
 
-args <- commandArgs(TRUE)
-size <- as.integer(args[1])
-step <- as.integer(args[2])
+filename_prefix <- "tmp"
+universe_size <- 500
 
 sim.dat <- read.csv("simout.csv") # Load simulation csv output
 
-arrow_len <- 10 # Length of arrow
-arrow_point <- 0.1 # Size of arrow-head
-max_time <- max(sim.dat$sim_time)
-sim_times_to_print <- seq(0, max_time, step) # List of simulation times to plot
-world_limits <- c(0, size) # Change to match universe_size
-# sim_times_to_print <- unique(sim.dat$sim_time) # Uncomment to print everything
+t.dat <- subset(sim.dat, sim_time==50)
 
-sim.dat$sim_time <- as.factor(sim.dat$sim_time)
+for (i in 0:99) {
+    t.dat <- subset(sim.dat, sim_time==i)
 
-for (time in sim_times_to_print) {
-  t.dat <- subset(sim.dat, sim_time==time)
-
-  with (t.dat,
-        print(
-          scatterplot3d(x=x, y=y, z=z,
-                        pch=16,
-                        main=paste0("World during Simulation Time: ", time))))
-
+    open3d(windowRect=c(0,0,1000,1000))
+    axes3d(edges="bbox", labels=FALSE, tick=FALSE)
+    plot3d(t.dat$x, t.dat$y, t.dat$z, aspect=TRUE, type="s", size=0.5,
+    		    xlim=c(0, universe_size),
+		    ylim=c(0, universe_size),
+		    zlim=c(0, universe_size))
+    
+    filename <- paste(filename_prefix, formatC(i, digits = 1, flag = "0"), ".png", sep = "")
+    rgl.snapshot(filename, "png", top=TRUE)
+    rgl.close()
 }
