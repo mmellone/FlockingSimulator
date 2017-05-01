@@ -10,26 +10,19 @@ NODES=1
 if [ "$1" ]; then
    NODES="$1"
 fi
-TIME=100
+TIME=50
 BIRDS=8192
 SIZE=10000
-
-echo "$NODES node(s) results:" > "$NODES.log"
-echo >> "$NODES.log"
 
 # ------------------------------
 # ----- 1 pthread per rank -----
 # ------------------------------
 RANKS=$((NODES * 64))
 THREADS=1
-echo "Running $PROGRAM with" >> "$NODES.log"
-echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS" >> "$NODES.log"
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
 
-srun --ntasks $RANKS --overcommit -o "$NODES.log" --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
-
-echo >> "$NODES.log"
-echo "--------------------------------------------------------" >> "$NODES.log"
-echo >> "$NODES.log"
+srun --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
 
 
 # -------------------------------
@@ -38,14 +31,10 @@ echo >> "$NODES.log"
 RANKS=$((NODES * 32))
 THREADS=2
 
-echo "Running $PROGRAM with" >> "$NODES.log"
-echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS" >> "$NODES.log"
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
 
-srun --ntasks $RANKS --overcommit -o "$NODES.log" --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
-
-echo >> "$NODES.log"
-echo "--------------------------------------------------------" >> "$NODES.log"
-echo >> "$NODES.log"
+srun --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
 
 
 # -------------------------------
@@ -54,14 +43,10 @@ echo >> "$NODES.log"
 RANKS=$((NODES * 16))
 THREADS=4
 
-echo "Running $PROGRAM with" >> "$NODES.log"
-echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS" >> "$NODES.log"
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
 
-srun --ntasks $RANKS --overcommit -o "$NODES.log" --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
-
-echo >> "$NODES.log"
-echo "--------------------------------------------------------" >> "$NODES.log"
-echo >> "$NODES.log"
+srun --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
 
 
 # -------------------------------
@@ -70,14 +55,10 @@ echo >> "$NODES.log"
 RANKS=$((NODES * 8))
 THREADS=8
 
-echo "Running $PROGRAM with" >> "$NODES.log"
-echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS" >> "$NODES.log"
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
 
-srun --ntasks $RANKS --overcommit -o "$NODES.log" --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
-
-echo >> "$NODES.log"
-echo "--------------------------------------------------------" >> "$NODES.log"
-echo >> "$NODES.log"
+srun --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
 
 
 # --------------------------------
@@ -86,14 +67,10 @@ echo >> "$NODES.log"
 RANKS=$((NODES * 4))
 THREADS=16
 
-echo "Running $PROGRAM with" >> "$NODES.log"
-echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS" >> "$NODES.log"
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
 
-srun --ntasks $RANKS --overcommit -o "$NODES.log" --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
-
-echo >> "$NODES.log"
-echo "--------------------------------------------------------" >> "$NODES.log"
-echo >> "$NODES.log"
+srun --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
 
 
 # --------------------------------
@@ -102,14 +79,10 @@ echo >> "$NODES.log"
 RANKS=$((NODES * 2))
 THREADS=32
 
-echo "Running $PROGRAM with" >> "$NODES.log"
-echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS" >> "$NODES.log"
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
 
-srun --ntasks $RANKS --overcommit -o "$NODES.log" --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
-
-echo >> "$NODES.log"
-echo "--------------------------------------------------------" >> "$NODES.log"
-echo >> "$NODES.log"
+srun --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
 
 
 # --------------------------------
@@ -118,11 +91,7 @@ echo >> "$NODES.log"
 RANKS="$NODES"
 THREADS=64
 
-echo "Running $PROGRAM with" >> "$NODES.log"
-echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS" >> "$NODES.log"
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
 
-srun --ntasks $RANKS --overcommit -o "$NODES.log" --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
-
-echo >> "$NODES.log"
-echo "--------------------------------------------------------" >> "$NODES.log"
-echo >> "$NODES.log"
+srun --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME

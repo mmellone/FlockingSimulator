@@ -17,7 +17,7 @@ def main():
         print "USAGE: generateBirds.py <number of centers> <size> <number of birds> <output file name>"
         return
     centers = []
-    minDistBetweenCenters = int(size * 0.2)
+    minDistBetweenCenters = int(size * 0.35)
 
     for c in range(numCenters):
         nextCenter = (randint(0, size), randint(0, size), randint(0, size))
@@ -38,7 +38,7 @@ def main():
             for i in range(3):
                 birdInfo += "," + str(randint(-5, 5))
             birdInfo += "\n"
-            
+
             # Print info to file
             fout.write(birdInfo)
     fout.close()
@@ -52,7 +52,7 @@ def distToClosestCenter(nextCenter, centers, size):
     return minDist
 
 def closeToBoundary(nextCenter, size):
-    for i in range(2):
+    for i in range(3):
         if nextCenter[i] < size*0.2 or nextCenter[i] > size*0.8:
             return True
     return False

@@ -36,8 +36,9 @@
 #define NUM_THREADS_DEFAULT 1
 #define IMPORT_FROM_FILE_DEFAULT 0
 #define PRINTING 1 /* 1 enables printing, 0 disables printing */
-#define BIRD_SPEED 10.0
-#define NEIGHBOR_RADIUS 50.0
+#define CSV_STATS 0
+#define BIRD_SPEED 40.0
+#define NEIGHBOR_RADIUS 400.0
 #define SEPARATION_RADIUS 25.0
 
 /* Constants */

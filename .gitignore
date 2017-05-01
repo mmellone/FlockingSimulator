@@ -1,8 +1,8 @@
 *.out
-*.csv
 *.pdf
 *.gif
 *.gch
 simulator
 .Rhistory
 .RData
+run*/

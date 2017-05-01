@@ -12,8 +12,9 @@ THREADS=1
 SIZE=500
 STEP=1
 TIME=100
+OUTDIR="tmp"
 
-while getopts "hb:f:g:i:n:p:s:t:" opt; do
+while getopts "hb:d:f:g:i:n:p:s:t:" opt; do
     case "$opt" in
     h)  echo "Usage: ./run [options]"
         echo "             -b <number of birds to simulate>"
@@ -27,6 +28,8 @@ while getopts "hb:f:g:i:n:p:s:t:" opt; do
         exit 0
         ;;
     b)  BIRDS=$OPTARG
+        ;;
+    d)  OUTDIR=$OPTARG
         ;;
     f)  FILE=$OPTARG
         ;;
@@ -81,15 +84,13 @@ else
 fi
 
 echo "Generating Plots"
-Rscript plot_birds.R $SIZE $STEP --vanilla
+mkdir $OUTDIR
+Rscript plot_birds.R $SIZE $OUTDIR $TIME --vanilla
 
 echo "Creating .gif"
-convert -delay 10x100 tmp* Rplots.gif
-rm tmp*
+convert -delay 10x100 $OUTDIR/* $OUTDIR/Rplots.gif
 
-#
 echo "Cleaning up"
-# rm simout.csv
-# # rm Rplots.pdf
+rm simout.csv
 
 echo "Finished!"
