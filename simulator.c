@@ -31,7 +31,8 @@ int main(int argc, char **argv) {
   max_time = NUM_ITERATIONS_DEFAULT;
   num_threads = NUM_THREADS_DEFAULT;
   import_from_file = IMPORT_FROM_FILE_DEFAULT;
-
+  bird_speed = (double) universe_size / BIRD_SPEED_FACTOR;
+  
   /* Initialize random number generator */
   srand((unsigned) time(NULL) * commrank);
 
@@ -39,7 +40,7 @@ int main(int argc, char **argv) {
   if (read_cl_args(&argc, &argv) == EXIT_FAILURE) {
     return EXIT_FAILURE;
   }
-
+  
   /* Define an MPI_Datatype for the Bird struct */
   MPI_Type_contiguous(BIRD_SIZE, MPI_FLOAT, &MPI_Bird);
   MPI_Type_commit(&MPI_Bird);
@@ -241,12 +242,11 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
       cohesion_z += b->z + delta(b->z, birds[i].z);
 
       // subtract the distance to the neighbor
-      double dx = delta(b->x, birds[i].x),
-	dy = delta(b->y, birds[i].y),
-	dz = delta(b->z, birds[i].z),
-	d = distance(b, &birds[i]);
-
+      double d = distance(b, &birds[i]);
       if (d > 0 && d <= SEPARATION_RADIUS) {
+	double dx = delta(b->x, birds[i].x),
+	  dy = delta(b->y, birds[i].y),
+	  dz = delta(b->z, birds[i].z);
 	normalize(&dx, &dy, &dz, 1.0);
 	separation_x -= dx / d;
 	separation_y -= dy / d;
@@ -279,7 +279,7 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
     double dx = alignment_x + cohesion_x + separation_x,
       dy = alignment_y + cohesion_y + separation_y,
       dz = alignment_z + cohesion_z + separation_z;
-    normalize(&dx, &dy, &dz, 10.0);
+    normalize(&dx, &dy, &dz, bird_speed);
     b->next_dx = dx;
     b->next_dy = dy;
     b->next_dz = dz;
@@ -295,8 +295,8 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
  *   one axis, accounting for wraparound
  */
 double delta( double d1, double d2 ) {
-  double delta = fabs(d2 - d1);
-  if (delta > universe_size/2.0)
+  double delta = d2 - d1;
+  if (delta > universe_size/2.0 || delta < universe_size/-2.0)
     delta = universe_size - delta;
   return delta;
 }
@@ -407,6 +407,7 @@ int read_cl_args( int * argc_p, char *** argv_p ) {
       } else {
         i++;
         universe_size = atoi(argv[i]);
+	bird_speed = (double) universe_size / BIRD_SPEED_FACTOR;
       }
     } else if (strcmp(argv[i], "-b") == 0) {
       if (i+1 >= argc) {
@@ -484,7 +485,7 @@ void spawn_birds_file(int start_id) {
       MPI_Finalize;
       exit(EXIT_FAILURE);
     } else {
-      normalize(&dx, &dy, &dz, BIRD_SPEED);
+      normalize(&dx, &dy, &dz, bird_speed);
       init_bird(start_id, i, x, y, z, dx, dy, dz);
     }
   }
@@ -500,10 +501,10 @@ void spawn_birds_randomly(int start_id) {
     x = rand() % universe_size;
     y = rand() % universe_size;
     z = rand() % universe_size;
-    dx = rand() % (int) BIRD_SPEED;
-    dy = rand() % (int) BIRD_SPEED;
-    dz = rand() % (int) BIRD_SPEED;
-    normalize(&dx, &dy, &dz, BIRD_SPEED);
+    dx = rand() % (int) bird_speed;
+    dy = rand() % (int) bird_speed;
+    dz = rand() % (int) bird_speed;
+    normalize(&dx, &dy, &dz, bird_speed);
     init_bird(start_id, i, x, y, z, dx, dy, dz);
   }
 

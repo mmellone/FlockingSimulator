@@ -85,6 +85,8 @@ fi
 
 echo "Generating Plots"
 mkdir $OUTDIR
+rm $OUTDIR/*.png
+rm $OUTDIR/Rplots.gif
 Rscript plot_birds.R $SIZE $OUTDIR $TIME --vanilla
 
 echo "Creating .gif"

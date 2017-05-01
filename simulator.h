@@ -37,9 +37,9 @@
 #define IMPORT_FROM_FILE_DEFAULT 0
 #define PRINTING 1 /* 1 enables printing, 0 disables printing */
 #define CSV_STATS 0
-#define BIRD_SPEED 40.0
+#define BIRD_SPEED_FACTOR 50.0
 #define NEIGHBOR_RADIUS 400.0
-#define SEPARATION_RADIUS 25.0
+#define SEPARATION_RADIUS 200.0
 
 /* Constants */
 #define BIRD_SIZE 10
@@ -66,6 +66,7 @@ int universe_size; /* Width/height of the universe */
 int num_birds; /* Number of birds to simulate */
 int birds_per_rank; /* Number of birds simulated by each rank */
 int birds_per_thread;
+double bird_speed;
 int max_time;
 int num_threads; /* Number of threads per mpi process */
 int import_from_file; /* 1 to import initial bird positions from file, 0 to randomly init */
