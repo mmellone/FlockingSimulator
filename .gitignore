@@ -6,3 +6,5 @@
 simulator
 .Rhistory
 .RData
+*.aux
+*.log
