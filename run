@@ -80,13 +80,15 @@ else
   rm *.birds
 fi
 
-# echo "Generating Plots"
- Rscript plot_birds.R $SIZE $STEP --vanilla
+echo "Generating Plots"
+Rscript plot_birds.R $SIZE $STEP --vanilla
+
+echo "Creating .gif"
+convert -delay 10x100 tmp* Rplots.gif
+rm tmp*
+
 #
-# echo "Creating .gif"
-# convert -delay 10x100 Rplots.pdf Rplots.gif
-#
-# echo "Cleaning up"
+echo "Cleaning up"
 # rm simout.csv
 # # rm Rplots.pdf
 
