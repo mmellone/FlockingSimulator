@@ -24,8 +24,11 @@ memory costs.
 
 \subsection*{Serial Algorithm}
 The standard serial flocking simulation follows a familiar simulation
-format. Roughly, calculate the three rules for each bird, then apply
-the rules to each bird after all calculations are complete.
+format. Roughly, the algorithm calculates the three flocking rules for
+each bird, stores the result in a temporary field, then later applies
+the rules to each bird after all calculations are complete. The
+separation of movement calculation and positional upating guarantees
+that all movement occurs simultaneously within a time-step.
 
 \newpage
 \begin{verbatim}
@@ -46,7 +49,7 @@ the rules to each bird after all calculations are complete.
 
 \subsection*{Parallel Algorithm}
 The parallel implementation of the simulation operates in much the
-same way, with the provision that each process (MPI rank) is
+same way, with the provision that each process (MPI rank) is now
 responsible for a subset of birds of the flock. Processes must then
 communicate their local information to all other processes in order
 for update rules to include all applicable birds. This communication
@@ -54,12 +57,12 @@ is implemented using MPI\_Allgather; each rank recieves a complete
 array of all birds in the universe to use in computation, but is only
 responsible for calculating the position updates for its own agents.
 Because MPI\_Allgather is a collective operation, ranks are
-synchronized over each time-step, and therefore the simulation is
+synchronized over each time-step, and the simulation is therefore
 cycle-accurate.
 
 We extend this approach to include functionality for
 multithreading. Where each rank is assigned to a subset of agents,
-each constituent thread of a process is responsible for a subset of
+each constituent thread of a rank is responsible for a subset of
 its rank's agents. MPI communication is only performed by the parent
 thread, and threads are synchronized between time-steps.
 

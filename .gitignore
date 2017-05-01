@@ -12,3 +12,4 @@ run*/
 *.bbl
 *.blg
 *.run.xml
+tmp/*

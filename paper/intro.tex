@@ -11,7 +11,8 @@ Alignment directs birds in the average direction of neighboring birds
 in the flock. Similarly, cohesion directs birds towards the average
 location of neighboring birds. Both of these principles ensure that
 the flock maintains coherency, so that individual birds are not lost
-from the flock. In contrast, separation directs birds away from
-neighboring birds which are too close. Separation then creates room
-within a flock, so that individual members are not crowded or
-co-located \cite{Reynolds}.
+from the flock. In contrast, separation directs birds away from any
+neighbors which are too close. This is implemented by the negation of
+the average of the normalized distance differentials. Separation then
+creates room within a flock to avoid crowding, co-location, and
+collision \cite{Reynolds}.

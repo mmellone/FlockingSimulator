@@ -1,4 +1,5 @@
 library(ggplot2)
+library(scales)
 
 # Results of the strong scaling study using random initial bird placements
 ss <- read.csv('strongscaling.csv')
@@ -10,7 +11,7 @@ ss$threads <- factor(ss$threads)
 ggplot(data=ss, aes(x=nodes)) +
   geom_line(aes(y=total, color=threads)) +
   geom_point(aes(y=total, color=threads)) +
-  scale_x_log10() +
+  scale_x_continuous(trans=log2_trans()) +
   scale_y_log10() +
   ggtitle("Strong Scaling Study Execution Time") +
   labs(x="BG/Q Nodes (log scale)", y="Total Time (in seconds, log scale)", color="Threads per Rank")
@@ -47,7 +48,7 @@ ggplot(data=ss, aes(x=nodes)) +
   geom_line(aes(y=compute, color=threads)) +
   geom_point(aes(y=compute, color=threads)) +
   ggtitle("Compute Time") +
-  scale_x_log10() +
+  scale_x_continuous(trans=log2_trans()) +
   scale_y_log10() +
   labs(x="BG/Q Nodes (log scale)", y="Time Spent in Compute(in seconds, log scale)", color="Threads per Rank")
 ggsave("plots/compute_time.png")
@@ -57,7 +58,7 @@ ggsave("plots/compute_time.png")
 ggplot(data=ss, aes(x=nodes)) +
   geom_line(aes(y=communicate, color=threads)) +
   ggtitle("Communication Time") +
-  scale_x_log10() +
+  scale_x_continuous(trans=log2_trans()) +
   scale_y_log10() +
   labs(x="BG/Q Nodes (log scale)", y="Time Spent in MPI Message Passing (in seconds, log scale)", color="Threads per Rank")
 ggsave("plots/comm_time.png")
@@ -69,9 +70,9 @@ ws$nodes <- (ws$ranks * ws$threads) / 64
 ws$threads <- factor(ws$threads)
 ggplot(data=ws, aes(x=nodes, y=total)) +
   geom_line() + geom_point() +
-  scale_x_log10() + scale_y_log10() +
+  scale_x_continuous(trans=log2_trans()) +
+  scale_y_log10() +
   ggtitle("Weak Scaling Study Execution Time") +
   labs(x="BG/Q Nodes (log scale)", y="Total Time (in seconds, log scale)")
 
 ggsave("plots/weakscaling.png")
-  
