@@ -13,6 +13,11 @@ ggplot(data=ss, aes(x=nodes)) +
   geom_point(aes(y=total, color=threads)) +
   scale_x_continuous(trans=log2_trans()) +
   scale_y_log10() +
+  theme(legend.position = c(0.8,0.7),
+        legend.background = element_rect(fill = NA),
+        panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = 'gray'),
+        panel.grid.minor = element_line(colour = 'light gray')) +
   ggtitle("Strong Scaling Study Execution Time") +
   labs(x="Ranks * Threads (log scale)", y="Total Time (in seconds, log scale)", color="Threads per Rank")
 ggsave("plots/total_time.pdf")
@@ -24,6 +29,11 @@ ss$total.speedup <- total.base / ss$total
 ggplot(data=ss, aes(x=nodes)) +
   geom_line(aes(y=total.speedup, color=threads)) +
   geom_point(aes(y=total.speedup, color=threads)) +
+  theme(legend.position = c(0.22,0.7),
+        legend.background = element_rect(fill = NA),
+        panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = 'gray'),
+        panel.grid.minor = element_line(colour = 'light gray')) +
   ggtitle("Total Speedup") +
   labs(x="Ranks * Threads", y="Speedup over 1 Node, 1 pthread", color="Threads per Rank")
 ggsave("plots/total_speedup.pdf")
@@ -38,6 +48,11 @@ ss$thread.total.speedup <- unlist(node.base[ss$nodes]) / ss$total
 ggplot(data=ss, aes(x=nodes)) +
   geom_line(aes(y=thread.total.speedup, color=threads)) +
   geom_point(aes(y=thread.total.speedup, color=threads)) +
+  theme(legend.position = c(0.22,0.7),
+        legend.background = element_rect(fill = NA),
+        panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = 'gray'),
+        panel.grid.minor = element_line(colour = 'light gray')) +
   ggtitle("Speedup over 1 pthread") +
   labs(x="Ranks * Threads", y="Speedup over 1 Node, No Pthreads", color="Threads per Rank")
 ggsave("plots/thread_speedup.pdf")
@@ -47,6 +62,11 @@ ggsave("plots/thread_speedup.pdf")
 ggplot(data=ss, aes(x=nodes)) +
   geom_line(aes(y=compute, color=threads)) +
   geom_point(aes(y=compute, color=threads)) +
+  theme(legend.position = c(0.8,0.7),
+        legend.background = element_rect(fill = NA),
+        panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = 'gray'),
+        panel.grid.minor = element_line(colour = 'light gray')) +
   ggtitle("Compute Time") +
   scale_x_continuous(trans=log2_trans()) +
   scale_y_log10() +
@@ -58,6 +78,11 @@ ggsave("plots/compute_time.pdf")
 ggplot(data=ss, aes(x=nodes)) +
   geom_line(aes(y=communicate, color=threads)) +
   ggtitle("Communication Time") +
+  theme(legend.position = c(0.8,0.3),
+        legend.background = element_rect(fill = NA),
+        panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = 'gray'),
+        panel.grid.minor = element_line(colour = 'light gray')) +
   scale_x_continuous(trans=log2_trans()) +
   scale_y_log10() +
   labs(x="Ranks * Threads (log scale)", y="Time Spent in MPI Message Passing (in seconds, log scale)", color="Threads per Rank")
@@ -72,6 +97,9 @@ ggplot(data=ws, aes(x=nodes, y=total)) +
   geom_line() + geom_point() +
   scale_x_continuous(trans=log2_trans()) +
   scale_y_log10() +
+  theme(panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = 'gray'),
+        panel.grid.minor = element_line(colour = 'light gray')) +
   ggtitle("Weak Scaling Study Execution Time (4 pthreads/rank)") +
   labs(x="Ranks * Threads (log scale)", y="Total Time (in seconds, log scale)")
 
