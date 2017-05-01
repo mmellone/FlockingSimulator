@@ -6,3 +6,9 @@ simulator
 .Rhistory
 .RData
 run*/
+*.aux
+*.log
+*-blx.bib
+*.bbl
+*.blg
+*.run.xml

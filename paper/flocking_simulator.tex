@@ -1,0 +1,39 @@
+\documentclass[10pt, twocolumn]{article}
+\usepackage{titling}
+\usepackage{fullpage}
+\usepackage{multicol}
+
+\usepackage[american]{babel}
+\usepackage[babel=true]{csquotes}
+\usepackage[backend=bibtex]{biblatex}
+
+\addbibresource{references.bib}
+
+\title{Massively Parallel Agent-Based Flocking Simulation}
+\author{Kevin O'Neill and Mitchell Mellone}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+  \input{abstract.tex}
+\end{abstract}
+
+\section*{Introduction}
+\input{intro.tex}
+
+\section*{Approach / Implementation}
+\input{approach.tex}
+
+\section*{Performance Results}
+\input{performance.tex}
+
+\section*{Analysis}
+\input{analysis.tex}
+
+\section*{Conclusion}
+\input{conclusion.tex}
+
+\printbibliography[title=References]
+\end{document}

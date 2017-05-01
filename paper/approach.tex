@@ -1,0 +1,71 @@
+\subsection*{Representation}
+The traditional approach to flocking simulation maintains a matrix
+representing the simulated universe which contains birds at specified
+indices. This representation is idea for graphics applications, since
+the state of the universe is explicitly defined. However, the explicit
+representation is less than ideal for scientific reasons--- while
+flocking behavior can be simulated correctly and efficiently, the
+manner in which the behavior is simulated provides little predictive
+power with regard to the cognitive, perceptual, and social mechanisms
+required to exhibit flocking behavior. Additionally the explicit
+representation has significant memory limitations. Since the entire
+state of the universe must be stored, the universe may only be as
+large as the total amount of memory available.
+
+In this project we take an agent-based perspective, which favors
+computation from the perspective of the individual rather than the
+system as a whole. This representation is more cognitively plausible,
+since computation must generally follow the steps of each individual
+agent. Using the agent-based approach, the universe is represented
+\emph{implicitly}. Individual locations are stored locally by the
+agent rather than by the individual's index within a global matrix,
+meaning that an increase in universe size does not incur additional
+memory costs. 
+
+\subsection*{Serial Algorithm}
+The standard serial flocking simulation follows a familiar simulation
+format. Roughly, calculate the three rules for each bird, then apply
+the rules to each bird after all calculations are complete.
+
+\newpage
+\begin{verbatim}
+  for ( time-steps 0...t ) {
+    for ( Bird b ) {
+      N = b's flock neighbors
+      alignment = avg. direction over N
+      cohesion = avg. x,y,z pos. over N
+      separation = -avg. distance to n in N
+
+      calculate dx/dy/dz
+    }
+
+    for ( Bird b )
+     update b's position
+  }
+\end{verbatim}
+
+\subsection*{Parallel Algorithm}
+The parallel implementation of the simulation operates in much the
+same way, with the provision that each process (MPI rank) is
+responsible for a subset of birds of the flock. Processes must then
+communicate their local information to all other processes in order
+for update rules to include all applicable birds. This communication
+is implemented using MPI\_Allgather; each rank recieves a complete
+array of all birds in the universe to use in computation, but is only
+responsible for calculating the position updates for its own agents.
+Because MPI\_Allgather is a collective operation, ranks are
+synchronized over each time-step, and therefore the simulation is
+cycle-accurate.
+
+We extend this approach to include functionality for
+multithreading. Where each rank is assigned to a subset of agents,
+each constituent thread of a process is responsible for a subset of
+its rank's agents. MPI communication is only performed by the parent
+thread, and threads are synchronized between time-steps.
+
+This leads us to another benefit of an implicit representation---
+where an explicit representation would be parallelized by assigning
+each rank to a sector of the universe, the implicit representation
+assigns agents to ranks. Computation is then more evenly distributed
+between processes with the implicit representation, since with the
+explicit representation entire sectors of the universe could be empty.
