@@ -1,0 +1,4 @@
+pdflatex flocking_simulator.tex
+bibtex flocking_simulator
+pdflatex flocking_simulator.tex
+pdflatex flocking_simulator.tex
