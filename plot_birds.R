@@ -1,4 +1,3 @@
-library(ggplot2)
 library(rgl)
 
 filename_prefix <- "tmp"
