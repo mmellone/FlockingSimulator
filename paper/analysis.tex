@@ -1,0 +1,19 @@
+An important finding of our strong scaling study was that speedup was consistently
+the greatest when using 4 pthreads per MPI rank, and overall usign a moderate number of
+threads for each rank outperformed the more extreme configurations. This result
+means that using pthreads in addition to MPI ranks produces both positive and
+negative performance tradeoffs.
+
+Figure \ref{fig:comm} shows that using more pthreads per MPI rank generally
+reduces the time spent for communication. This is likely what produces the performance
+increase when using multiple pthreads per rank. Initially, when using a small
+number of parallel prrocesses (less than 512) communication makes up very little
+of the total time required to run the simulation; however as we scale up the
+number of parallel processes while holding the size of the simulation constant,
+we observe that communication quickly becomes a major contributor to total
+execution time (figure \ref{fig:commpercent}). This relationship was likely the
+cause for the total speedup behavior of the single thread per rank case (figure
+\ref{fig:totalspeedup}), which had much worse performance than all other cases as we
+scaled to large numbers of parallel processes.
+
+The reason behind the slower communication times for 

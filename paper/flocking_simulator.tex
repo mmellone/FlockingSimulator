@@ -3,6 +3,7 @@
 \usepackage{fullpage}
 \usepackage{multicol}
 \usepackage{graphicx}
+\usepackage{placeins}
 \usepackage[american]{babel}
 \usepackage[babel=true]{csquotes}
 \usepackage[backend=bibtex]{biblatex}
@@ -32,7 +33,9 @@
 \input{visualization.tex}
 
 \section*{Performance Results}
+\FloatBarrier
 \input{performance.tex}
+\FloatBarrier
 
 \section*{Analysis}
 \input{analysis.tex}
