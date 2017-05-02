@@ -51,6 +51,14 @@ that all movement occurs simultaneously within a time-step.
   }
 \end{verbatim}
 
+The skeleton of the simulation, as well as functionality for setting
+parameters by command-line arguments was implemented by Mitchell
+Mellone.  The flocking rules were implemented by Kevin O'Neill based
+largely on the original simulation of boid flocking in
+\cite{Reynolds}. In contrast, the representation of birds as C structs
+was originally implemented by Mitchell Mellone, and later optimized
+and extended for 3D by Kevin O'Neill.
+
 \subsection*{Parallel Algorithm}
 The parallel implementation of the simulation operates in much the
 same way, with the provision that each process (MPI rank) is now
@@ -81,3 +89,9 @@ substantial cost in communication overhead. Since the neighbors of an
 agent can be maintained by any rank, each rank must receive a complete
 array of all agents in the universe. Ideally ranks would only need to
 gather agents which are relevant to its computation.
+
+The parallelization of the original simulation in MPI (including
+necessary communication between ranks) was implemented by Kevin
+O'Neill. Afterwards multi-threading was implemented by Mitchell
+Mellone using the pthread library.
+
