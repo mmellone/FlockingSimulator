@@ -18,7 +18,7 @@ for (i in 0:time) {
     		    xlim=c(0, universe_size), ylim=c(0, universe_size), zlim=c(0, universe_size),
             xlab="", ylab="", zlab="", main=paste0("Time: ", i))
     
-    filename <- paste(filename_prefix, "/", formatC(i, digits = 1, flag = "0"), ".png", sep = "")
+    filename <- sprintf("%s/%04d.png", filename_prefix, i)
     rgl.snapshot(filename, "png", top=TRUE)
     rgl.close()
 }
