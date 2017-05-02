@@ -1,6 +1,15 @@
 #!/bin/bash
 
-(cd ../data && Rscript plots.R)
+if [ "$1" = "-h" ]; then
+    echo "Usage: ./build [options]"
+    echo "               -c: compile all plots"
+    echo "               -h: display this message"
+    exit
+fi
+
+if [ "$1" = "-c" ]; then
+    (cd ../data && Rscript plots.R)
+fi
 
 pdflatex flocking_simulator.tex
 bibtex flocking_simulator
