@@ -53,7 +53,13 @@ that these simple rules generate flocks which behave in a manner
 remarkably similar to real flocks of birds.
 
 Interestingly enough, these rules can also be used to produce emergent
-divergence of flocks which are too large.
+divergence of flocks which are too large. In order to accomplish this,
+we ran a simulation of 8192 birds separated into two flocks in a
+universe of size 10000. Since each flock was substantially larger than
+the neighbor radius of the individual birds, alignment and cohesion
+had little effect. Instead, the crowding of birds within these larger
+flocks caused the separation rule to gradually pull the flocks apart,
+creating a larger number of more spacious flocks.
 
 \begin{figure}[h!]
   \centering
@@ -82,3 +88,7 @@ divergence of flocks which are too large.
     0, 10, 25, and 75 time-steps}
   \label{fig:visuals}
 \end{figure}
+
+The visualization software was originally implemented in R in two
+dimensions by Mitchell Mellone, then modified for three dimensions by
+Kevin O'Neill.
