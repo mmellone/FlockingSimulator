@@ -9,12 +9,12 @@ negative performance tradeoffs.
 Figure \ref{fig:comm} shows that using more pthreads per MPI rank generally
 reduces the time spent for communication. This is likely what produces the performance
 increase when using multiple pthreads per rank. Initially, when using a small
-number of parallel prrocesses (less than 512) communication makes up very little
+number of parallel processes (less than 512) communication makes up very little
 of the total time required to run the simulation; however as we scale up the
 number of parallel processes while holding the size of the simulation constant,
 we observe that communication quickly becomes a major contributor to total
-execution time (figure \ref{fig:commpercent}). This relationship was likely the
-cause for the total speedup behavior of the single thread per rank case (figure
+execution time (Figure \ref{fig:commpercent}). This relationship was likely the
+cause for the total speedup behavior of the single thread per rank case (Figure
 \ref{fig:totalspeedup}), which had much worse performance than all other cases as we
 scaled to large numbers of parallel processes.
 
@@ -35,8 +35,8 @@ becomes especially apparent for large scale parallel computation.
 
 There must exist some limitation for pthreads however, since the configurations
 with many threads per rank were outperformed by other configurations with more
-moderate numbers of threads (figure \ref{fig:totalspeedup}). This limiting factor
-appears to be the compute time (figure \ref{fig:compute}). Updates for each
+moderate numbers of threads (Figure \ref{fig:totalspeedup}). This limiting factor
+appears to be the compute time (Figure \ref{fig:compute}). Updates for each
 bird are computed individually and written to separate variables that do not
 get read by threads that are updating other birds. These separate variables
 comprise a ``future'' state for that bird, and once all of the updates have
@@ -52,7 +52,7 @@ of threads increase this additional barrier can degrade performance. Further,
 using more threads on each BG/Q compute node decreases the locality of the shared
 memory that each thread needs to access, which could also decrease performance.
 Cases that utilize many pthreads still spend a substantial amount of their total
-execution time in computation (figure \ref{fig:commpercent}), therefore this
+execution time in computation (Figure \ref{fig:commpercent}), therefore this
 slowdown caused by many pthreads can limit any performance gains made by faster
 MPI communications.
 
@@ -68,7 +68,7 @@ and 128 nodes. The maximum number of birds that we simulated was 131,072 (using
 128 nodes).
 
 The time required to run each of these simulations roughly increased proportionally
-to the number of birds that we were simulating (figure \ref{fig:weakscaling}).
+to the number of birds that we were simulating (Figure \ref{fig:weakscaling}).
 Each bird has to compare itself with every other bird in the simulation, so that
 the running time of the update computations were \(O(n^2)\) with respect to the
 number of birds. Therefore, a linear increase in the number of compute nodes
@@ -76,8 +76,8 @@ relative to the number of birds being simulated was not able to maintain a
 constant performance.
 
 The maximum number of events per second that we acheived was 248,684.2 which
-occured while using 2048 parallel processes, or 32 BG/Q compute nodes (figure
+occured while using 2048 parallel processes, or 32 BG/Q compute nodes (Figure
 \ref{fig:eventspersec}). The events/second actually decreased when using 64 and
 128 nodes. This was likely due to the computationally intensive update algorithm
 and sublinear scaling when using large numbers of nodes, which can be seen on the
-right side of figure \ref{fig:total}.
+right side of Figure \ref{fig:total}.

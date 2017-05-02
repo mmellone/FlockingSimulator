@@ -8,11 +8,6 @@
  * Due: 2 May 2017
 */
 
-/*
- * NOTES:
- * - The coordinate (0, 0) is the bottom left corner and
- *   (universe_size, universe_size) is the top right corner
-*/
 #ifndef _SIMULATOR_H_
 #define _SIMULATOR_H_
 
@@ -25,6 +20,7 @@
 #include <string.h>
 #include <time.h>
 
+/* Cycle counter */
 #ifdef BGQ
 #include <hwi/include/bqc/A2_inlines.h>
 #endif
@@ -42,7 +38,7 @@
 #define SEPARATION_RADIUS 200.0
 
 /* Constants */
-#define BIRD_SIZE 10
+#define BIRD_SIZE 10  /* Size of Bird in # of ints/floats */
 #define CLOCK_RATE 1600000000
 #define FILE_NAME_BUFFER_SIZE 100
 
@@ -59,15 +55,15 @@ typedef struct Bird {
   float dx, dy, dz;
   float next_dx, next_dy, next_dz;
 } Bird;
-MPI_Datatype MPI_Bird;  /* an MPI_Datatype for the Bird struct below */
+MPI_Datatype MPI_Bird;  /* an MPI_Datatype for the Bird struct above */
 
 /* Global Variables */
 int universe_size; /* Width/height of the universe */
 int num_birds; /* Number of birds to simulate */
 int birds_per_rank; /* Number of birds simulated by each rank */
 int birds_per_thread;
-double bird_speed;
-int max_time;
+double bird_speed; /* Distance travelled by each bird every iteration */
+int max_time; /* The number of iterations to compute */
 int num_threads; /* Number of threads per mpi process */
 int import_from_file; /* 1 to import initial bird positions from file, 0 to randomly init */
 int commsize;  /* the number of MPI Ranks */
@@ -76,7 +72,6 @@ Bird * birds; /* Local birds in this rank */
 Bird * all_birds; /* All birds in simulation */
 FILE * output_file;
 my_pthread_barrier_t * pthread_barrier;
-
 
 /* Cycle counters/timers for MPI communication vs. computation */
 #ifdef BGQ

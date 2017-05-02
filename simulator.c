@@ -15,12 +15,12 @@ int main(int argc, char **argv) {
   int i, x, y, z;
   double dx, dy, dz;
   pthread_t * threads;
-
+  
   /* Start MPI */
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &commsize);
   MPI_Comm_rank(MPI_COMM_WORLD, &commrank);
-
+  
   /* Initialize barrier for pthreads */
   pthread_barrier = malloc(sizeof(my_pthread_barrier_t));
   my_pthread_init_barrier(pthread_barrier);
@@ -102,6 +102,7 @@ int main(int argc, char **argv) {
 
   MPI_Barrier(MPI_COMM_WORLD);
 
+  /* Write execution time to stdout */
   if (commrank == 0) {
 #ifdef BGQ
     if (CSV_STATS) {
@@ -132,6 +133,7 @@ int main(int argc, char **argv) {
 #endif
   }
 
+  /* Clean up dynamic memory and close MPI */
   free(all_birds);
   free(birds);
   free(pthread_barrier);
@@ -139,13 +141,16 @@ int main(int argc, char **argv) {
 }
 
 
+/**
+ * Run the simulation with the given starting index
+ */
 void * run_simulation(void * start_bird_p) {
   int i, sim_time;
   int start_bird = *(int*)start_bird_p;
   int thread_id = start_bird / birds_per_thread;
   free(start_bird_p);
 
-  /* initialize start time variables */
+  /* Declare start time variables */
 #ifdef BGQ
   unsigned long long start_time;
 #else
@@ -159,7 +164,7 @@ void * run_simulation(void * start_bird_p) {
       if (PRINTING)
 	print(output_file, birds, sim_time, 1);
 
-      /* Start the MPI timer */
+      /* Start the MPI timer for communication time */
       if (commrank == 0) {
 #ifdef BGQ
 	start_time = GetTimeBase();
@@ -173,6 +178,7 @@ void * run_simulation(void * start_bird_p) {
         all_birds, birds_per_rank, MPI_Bird,
         MPI_COMM_WORLD);
 
+      /* Add the time spent in communication to comm_time */
       if (commrank == 0) {
 #ifdef BGQ
 	comm_time += GetTimeBase() - start_time;
@@ -182,7 +188,7 @@ void * run_simulation(void * start_bird_p) {
       }
     }
 
-    /* Start the MPI timer */
+    /* Start the MPI timer for computation time */
     if (commrank == 0 && thread_id == 0) {
 #ifdef BGQ
       start_time = GetTimeBase();
@@ -191,20 +197,18 @@ void * run_simulation(void * start_bird_p) {
 #endif
     }
 
+    /* Calculate next moves */
     my_pthread_barrier(pthread_barrier, num_threads);
-    for (i = start_bird; i < start_bird + birds_per_thread; i++) {
-      /* Calculate next moves */
+    for (i = start_bird; i < start_bird + birds_per_thread; i++)
       decide_next_move(all_birds, start_bird + i, &birds[i]);
-    }
-
+    
+    /* Apply moves after all moves are calculated */
     my_pthread_barrier(pthread_barrier, num_threads);
-    for (i = start_bird; i < start_bird + birds_per_thread; i++) {
-      /* Apply moves after all moves are calculated */
+    for (i = start_bird; i < start_bird + birds_per_thread; i++)
       apply_next_move(&birds[i]);
-    }
 
+    /* Add time spent in computation to comp_time */
     my_pthread_barrier(pthread_barrier, num_threads);
-
     if (commrank == 0 && thread_id == 0) {
 #ifdef BGQ
       comp_time += GetTimeBase() - start_time;
@@ -233,15 +237,18 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
   for (i = 0; i < num_birds; ++i) {
     if (i != bird_index && distance(b, &birds[i]) < NEIGHBOR_RADIUS) {
       ++neighbor_count;
+
+      /* Alignment is the average direction of neighbors */
       alignment_x += birds[i].dx;
       alignment_y += birds[i].dy;
       alignment_z += birds[i].dz;
 
-      cohesion_x += b->x + delta(b->x, birds[i].x);  // add the position
+      /* Cohesion is the average position of neighbors */
+      cohesion_x += b->x + delta(b->x, birds[i].x);
       cohesion_y += b->y + delta(b->y, birds[i].y);
       cohesion_z += b->z + delta(b->z, birds[i].z);
 
-      // subtract the distance to the neighbor
+      /* Separation is the negative distance to neighbors */
       double d = distance(b, &birds[i]);
       if (d > 0 && d <= SEPARATION_RADIUS) {
 	double dx = delta(b->x, birds[i].x),
@@ -252,20 +259,17 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
 	separation_y -= dy / d;
 	separation_z -= dz / d;
       }
-
     }
   }
-
+  
   if (neighbor_count > 0) {
     /* divide out all averages by neighbor count */
     alignment_x /= neighbor_count;
     alignment_y /= neighbor_count;
     alignment_z /= neighbor_count;
-
     cohesion_x = (cohesion_x / neighbor_count) - b->x;
     cohesion_y = (cohesion_y / neighbor_count) - b->y;
     cohesion_z = (cohesion_z / neighbor_count) - b->z;
-
     separation_x /= neighbor_count;
     separation_y /= neighbor_count;
     separation_z /= neighbor_count;
@@ -284,6 +288,7 @@ void decide_next_move(Bird *birds, int bird_index, Bird * b) {
     b->next_dy = dy;
     b->next_dz = dz;
   } else {
+    /* If no neighbors are found, continue in the same direction */
     b->next_dx = b->dx;
     b->next_dy = b->dy;
     b->next_dz = b->dz;
@@ -313,8 +318,9 @@ double distance (Bird *b1, Bird* b2 ) {
   return sqrt(dx*dx + dy*dy + dz*dz);
 }
 
-/* Applys the next move to a bird b */
+/* Applies the next move to a bird b */
 void apply_next_move( Bird *b ) {
+  /* Update the direction */
   b->dx = b->next_dx;
   b->dy = b->next_dy;
   b->dz = b->next_dz;

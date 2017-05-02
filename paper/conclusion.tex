@@ -9,27 +9,51 @@ as efficient as sending larger packages of data between fewer ranks. A weak
 scaling study showed that there is still much room for improvement in our update
 algorithm in order to create better performance for very large numbers of birds.
 
-The performance of the position update algorithm can be vastly improved by using
-a better data structure than a simple array to hold the bird data types. In
-particular we want a data structure that makes it easier to find birds that are
-close together position-wise. This could be accomplished using a multidimensional
-binary search tree, where it has been shown that regional searches can be done
-in \(O(kN^{1-1/k})\) time \cite{Lee}. This would be a vast improvement over our
-current \(O(n^2)\) search implementation.
+\subsection*{Future Work}
+The performance of the position update algorithm can be vastly
+improved by using a data structure more efficient than a simple array
+to hold the bird data types. In particular we want a data structure
+that makes it easier to find birds that are located closely within the
+universe. This could be accomplished using a multidimensional binary
+search tree, where it has been shown that regional searches can be
+done in \(O(kN^{1-(1/k)})\) time \cite{Lee}. This would be a vast
+improvement over our current \(O(n^2)\) search implementation.
 
-Additionally we could also modify the MPI message passing to only send the
-birds that are required by each MPI rank. Although the collective message passing
-is quite efficient, as we continue to increase the number of simulated agents
-it becomes impractical to keep a copy of every agent in each rank and perform a
-large MPI\_Allgather each iteration.
+Additionally we could also modify the MPI message passing to gather
+only the birds which are relevant to the MPI rank collecting
+them. Although collective message passing is quite efficient, as we
+continue to increase the number of simulated agents it becomes
+impractical to keep a copy of every agent in each rank and perform a
+large MPI\_Allgather each iteration. Instead, by sending birds to each
+rank separately and by keeping track of which birds are utilized by
+that rank, we could potentially rely on the principle of locality to
+reduce the communication overhead of globally sharing every bird to
+every rank.
 
-While this simulation was specifically designed to imitate flocking birds, there
-are many other applications that can make use of a efficient and highly scalable
-simulator like this. For example, the emergent principles of flocking birds can
-be applied to create dynamic visualizations of temporal data evolutions, such as
-stock data \cite{Moere}. The simulation of the interactions between many agents
-can even be used to select songs on an internet radio based on what other people
-are currently listening to \cite{Ibáñez}.
+Alternatively, a completely different conception of our approach to
+parallelization could generate substantial savings in both
+communication overhead and computation time. In our approach, birds
+are assigned to an MPI rank statically upon initialization. This
+balances the workload between ranks, but unfortunately increases the
+total amount of work since every rank must gather birds which are
+irrelevant to its computation. By dynamically assigning birds to MPI
+ranks, we can associate each cluster or flock of birds with a specific
+set of MPI ranks which need only communicate with each other. Then the
+only communication necessary between disparate ranks would be for the
+dynamic reassignment of birds to a different rank. Since dynamic
+assignment reduces the number, size, and breadth of messages, it has
+the potential for large performance gains at the cost of a more
+complex implementation.
+
+\subsection*{Applications}
+While this simulation was specifically designed to imitate flocking
+birds, there are many other applications that can make use of a
+efficient and highly scalable simulator such as this. For example, the
+emergent principles of flocking birds can be applied to create dynamic
+visualizations of temporal data evolutions, such as stock
+data \cite{Moere}. The simulation of the interactions between many
+agents can even be used to select songs on an internet radio based on
+what other people are currently listening to \cite{Ibáñez}.
 
 There are many more uses for efficient simulations of emergent flocking behavior.
 Our techniques of using an implicitly defined universe and combining
