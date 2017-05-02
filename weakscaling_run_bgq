@@ -1,0 +1,119 @@
+#!/bin/bash
+
+DIR=$(pwd)
+PROGRAM="simulator"
+
+# --------------------------
+# ----- Set parameters -----
+# --------------------------
+NODES=1
+if [ "$1" ]; then
+   NODES="$1"
+fi
+TIME=1000
+BIRDS=1024
+SIZE=20000
+
+# ------------------------------
+# ----- 512 birds, 1 node ------
+# ------------------------------
+RANKS=$((NODES * 16))
+THREADS=4
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS, BIRDS=$BIRDS"
+
+srun --nodes $NODES --ntasks $RANKS -o weak_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+NODES=$((NODES*2))
+BIRDS=$((BIRDS*2))
+
+# -------------------------------
+# ----- 1024 birds, 2 nodes -----
+# -------------------------------
+RANKS=$((NODES * 16))
+THREADS=4
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS, BIRDS=$BIRDS"
+
+srun --nodes $NODES --ntasks $RANKS -o weak_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+NODES=$((NODES*2))
+BIRDS=$((BIRDS*2))
+
+# -------------------------------
+# ----- 2048 birds, 4 nodes -----
+# -------------------------------
+RANKS=$((NODES * 16))
+THREADS=4
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS, BIRDS=$BIRDS"
+
+srun --nodes $NODES --ntasks $RANKS -o weak_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+NODES=$((NODES*2))
+BIRDS=$((BIRDS*2))
+
+# -------------------------------
+# ----- 4096 birds, 8 nodes -----
+# -------------------------------
+RANKS=$((NODES * 16))
+THREADS=4
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS, BIRDS=$BIRDS"
+
+srun --nodes $NODES --ntasks $RANKS -o weak_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+NODES=$((NODES*2))
+BIRDS=$((BIRDS*2))
+
+# ---------------------------------
+# ----- 8192 birds, 16 nodes ------
+# ---------------------------------
+RANKS=$((NODES * 16))
+THREADS=4
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS, BIRDS=$BIRDS"
+
+srun --nodes $NODES --ntasks $RANKS -o weak_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+NODES=$((NODES*2))
+BIRDS=$((BIRDS*2))
+
+# ---------------------------------
+# ----- 16384 birds, 32 nodes -----
+# ---------------------------------
+RANKS=$((NODES * 16))
+THREADS=4
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS, BIRDS=$BIRDS"
+
+srun --nodes $NODES --ntasks $RANKS -o weak_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+NODES=$((NODES*2))
+BIRDS=$((BIRDS*2))
+
+# ---------------------------------
+# ----- 32768 birds, 64 nodes -----
+# ---------------------------------
+RANKS=$((NODES * 16))
+THREADS=4
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS, BIRDS=$BIRDS"
+
+srun --nodes $NODES --ntasks $RANKS -o weak_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+NODES=$((NODES*2))
+BIRDS=$((BIRDS*2))
+
+# ----------------------------------
+# ----- 65536 birds, 128 nodes -----
+# ----------------------------------
+RANKS=$((NODES * 16))
+THREADS=4
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS, BIRDS=$BIRDS"
+
+srun --nodes $NODES --ntasks $RANKS -o weak_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+NODES=$((NODES*2))
+BIRDS=$((BIRDS*2))
