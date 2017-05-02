@@ -83,16 +83,21 @@ else
   rm *.birds
 fi
 
-echo "Generating Plots"
-mkdir $OUTDIR
-rm $OUTDIR/*.png
-rm $OUTDIR/Rplots.gif
-Rscript plot_birds.R $SIZE $OUTDIR $TIME --vanilla
+#---------------Uncomment to visualize simulation output-----------------------
+#
+#
+#echo "Generating Plots"
+#mkdir $OUTDIR
+#rm $OUTDIR/*.png
+#rm $OUTDIR/Rplots.gif
+#Rscript plot_birds.R $SIZE $OUTDIR $TIME --vanilla
 
-echo "Creating .gif"
-convert -delay 10x100 $OUTDIR/* $OUTDIR/Rplots.gif
+#echo "Creating .gif"
+#convert -delay 10x100 $OUTDIR/* $OUTDIR/Rplots.gif
+#
+#echo "Cleaning up"
+#rm simout.csv
+#----------------------------End commented section-----x-----------------------
 
-echo "Cleaning up"
-rm simout.csv
 
 echo "Finished!"

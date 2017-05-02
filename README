@@ -1,0 +1,22 @@
+In order to compile the flocking simulator, simply use the command
+
+> make all
+
+This by default uses MPI_Wtime for timing. If running on the BG/Q,
+simply add the flag "-D BGQ" to the Makefile and rebuild the
+executable to enable the cycle counter.
+
+The script "run" initializes and excutes the simulation. To run the
+simulation with all default parameters, use the command
+
+> ./run
+
+To list all of the possible command-line arguments, use the command
+
+> ./run -h
+
+We've commented out the section of the script which creates
+visualizations from the simulation output, since this requires a
+working version of R and ImageMagick. In order to create flocking
+visualizations, install these packages on your machine, uncomment this
+section of the run script, and re-run the script.
