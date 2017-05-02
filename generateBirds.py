@@ -17,7 +17,7 @@ def main():
         print "USAGE: generateBirds.py <number of centers> <size> <number of birds> <output file name>"
         return
     centers = []
-    minDistBetweenCenters = int(size * 0.35)
+    minDistBetweenCenters = int(size * 0.3)
 
     for c in range(numCenters):
         nextCenter = (randint(0, size), randint(0, size), randint(0, size))
