@@ -32,6 +32,7 @@ that all movement occurs simultaneously within a time-step.
 
 \begin{verbatim}
   for ( time-steps 0...t ) {
+    /* Calculate bird movements */
     for ( Bird b ) {
       N = b's flock neighbors
       alignment = avg. direction over N
@@ -41,8 +42,12 @@ that all movement occurs simultaneously within a time-step.
       calculate dx/dy/dz
     }
 
-    for ( Bird b )
-     update b's position
+    /* Update the bird's positions */
+    for ( Bird b ) {
+      x += dx
+      y += dy
+      z += dz
+    }
   }
 \end{verbatim}
 
