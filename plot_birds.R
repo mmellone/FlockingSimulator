@@ -8,7 +8,6 @@ bird_size <- universe_size / 200.0 # Set the sphere radius as 1/200th the graph 
 
 sim.dat <- read.csv("simout.csv") # Load simulation csv output
 
-
 for (i in 0:time) {
     t.dat <- subset(sim.dat, sim_time==i)
 
