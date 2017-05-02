@@ -58,7 +58,7 @@ ggplot(data=ss, aes(x=nodes)) +
         panel.grid.minor = element_line(colour = 'light gray'),
         text=element_text(size=18)) +
   ggtitle("Thread Speedup") +
-  labs(x="Ranks * Threads", y="Speedup over 1 Node, No Pthreads", color="Threads per Rank")
+  labs(x="Ranks * Threads", y="Speedup over Single pthread", color="Threads per Rank")
 ggsave("plots/thread_speedup.pdf")
 
 
@@ -101,7 +101,7 @@ ss$percentComm <- (ss$communicate / ss$total) * 100.0
 ggplot(data=ss, aes(x=nodes)) +
   geom_line(aes(y=percentComm, color=threads)) +
   geom_point(aes(y=percentComm, color=threads)) +
-  ggtitle("Percent Total Time Spent on MPI Communication") +
+  ggtitle("Percent Time Spent on Communication") +
   theme(legend.position = c(0.3,0.7),
         legend.background = element_rect(fill = NA),
         panel.background = element_rect(fill = 'white', colour = 'black'),
@@ -126,7 +126,7 @@ ggplot(data=ws, aes(x=nodes, y=total)) +
         panel.grid.major = element_line(colour = 'gray'),
         panel.grid.minor = element_line(colour = 'light gray'),
         text=element_text(size=18)) +
-  ggtitle("Weak Scaling Study Execution Time (4 pthreads/rank)") +
+  ggtitle("Weak Scaling Study Execution Time") +
   labs(x="Ranks * Threads (log scale)", y="Time (in seconds, log scale)")
 ggsave("plots/weakscaling.pdf")
 
@@ -142,6 +142,6 @@ ggplot(data=ws, aes(x=nodes, y=events.per.second)) +
         panel.grid.major = element_line(colour = 'gray'),
         panel.grid.minor = element_line(colour = 'light gray'),
         text=element_text(size=18)) +
-  ggtitle("Events Per Second (4 pthreads/rank)") +
+  ggtitle("Events Per Second") +
   labs(x="Ranks * Threads (log scale)", y="Number of Events per Second")
 ggsave("plots/eventspersec.pdf")

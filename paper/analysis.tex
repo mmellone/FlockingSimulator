@@ -1,3 +1,5 @@
+\subsection*{Strong Scaling Study}
+
 An important finding of our strong scaling study was that speedup was consistently
 the greatest when using 4 pthreads per MPI rank, and overall usign a moderate number of
 threads for each rank outperformed the more extreme configurations. This result
@@ -16,4 +18,66 @@ cause for the total speedup behavior of the single thread per rank case (figure
 \ref{fig:totalspeedup}), which had much worse performance than all other cases as we
 scaled to large numbers of parallel processes.
 
-The reason behind the slower communication times for 
+The slower communication times for the cases with fewer threads per rank is
+likely due to there being more MPI ranks involved in the collective MPI\_Allgather
+operations than in cases with more threads per rank. Specifically, the single
+thread case requires 64 MPI ranks per compute node to be involved in the collective
+message passing, while the case with 64 ranks requires only a single MPI rank per
+node. The total volume of data being passed between ranks is still the same
+(since each rank needs to gather the entire array of birds in the universe),
+however, when more threads are used fewer, though larger, messages are passed.
+Although the Blue Gene/Q has a very efficient and specialized network that allows
+these messages to be passed quickly, it is possible that small messages are not
+passed as efficiently as large messages due to memory block sizes. That, combined
+with the larger volume of small messages that need to be passed for low thread
+configurations, likely created a decrease in communication performance that
+becomes especially apparent for large scale parallel computation.
+
+There must exist some limitation for pthreads however, since the configurations
+with many threads per rank were outperformed by other configurations with more
+moderate numbers of threads (figure \ref{fig:totalspeedup}). This limiting factor
+appears to be the compute time (figure \ref{fig:compute}). Updates for each
+bird are computed individually and written to separate variables that do not
+get read by threads that are updating other birds. These separate variables
+comprise a ``future'' state for that bird, and once all of the updates have
+been completed across all threads, then they are applied to each bird. This
+approach doesn't require shared memory to be locked while the updates are happening,
+since reads and writes occur in separate places. While this overcomes some of the
+performance issues inherent with shared memory implementations like pthreads, we
+still are required to use a pthread barrier to wait for all threads to finish
+updating before applying the changes in shared memory. This means that each rank
+is limited in performance to its slowest pthread. When the number of pthreads per
+MPI rank is low, this bottleneck is not very significant, however as the number
+of threads increase this additional barrier can degrade performance. Further,
+using more threads on each BG/Q compute node decreases the locality of the shared
+memory that each thread needs to access, which could also decrease performance.
+Cases that utilize many pthreads still spend a substantial amount of their total
+execution time in computation (figure \ref{fig:commpercent}), therefore this
+slowdown caused by many pthreads can limit any performance gains made by faster
+MPI communications.
+
+\subsection*{Weak Scaling Study}
+
+After our strong scaling study, we selected the configuration with the best
+performance, being 4 pthreads per rank and 16 MPI ranks per BG/Q node, to
+perform a weak scaling study where we increase the number of birds proportionally
+to the number of parallel processes we are using. We decided to use 1024 birds
+per BG/Q node, which means that each individual thread was responsible for 16
+birds. We ran this simulation for 1000 iterations using 1, 2, 4, 8, 16, 32, 64,
+and 128 nodes. The maximum number of birds that we simulated was 131,072 (using
+128 nodes).
+
+The time required to run each of these simulations roughly increased proportionally
+to the number of birds that we were simulating (figure \ref{fig:weakscaling}).
+Each bird has to compare itself with every other bird in the simulation, so that
+the running time of the update computations were \(O(n^2)\) with respect to the
+number of birds. Therefore, a linear increase in the number of compute nodes
+relative to the number of birds being simulated was not able to maintain a
+constant performance.
+
+The maximum number of events per second that we acheived was 248,684.2 which
+occured while using 2048 parallel processes, or 32 BG/Q compute nodes (figure
+\ref{fig:eventspersec}). The events/second actually decreased when using 64 and
+128 nodes. This was likely due to the computationally intensive update algorithm
+and sublinear scaling when using large numbers of nodes, which can be seen on the
+right side of figure \ref{fig:total}.
