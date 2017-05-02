@@ -38,9 +38,11 @@ compute nodes, respectively).
 The speedup relative to 64 MPI ranks and one pthread per rank (using
 one BG/Q node) is shown in Figure \ref{fig:totalspeedup}. Our maximum
 speedup was 67.518x which was achieved with 2048 MPI ranks and four
-pthreads per rank. Much like Figure \ref{fig:total} the more extreme
-thread per rank configurations, such as 1, 2, 32, and 64 pthreads per
-rank perform much worse than the more balanced configurations.
+pthreads per rank. This speedup is large compared to previous previous
+implementations of flocking behavior \cite{Lorek}. Much like Figure
+\ref{fig:total} the more extreme thread per rank configurations, such
+as 1, 2, 32, and 64 pthreads per rank perform much worse than the more
+balanced configurations.
 
 \subsection*{Compute vs. Communication}
 
