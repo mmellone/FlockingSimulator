@@ -20,3 +20,6 @@ visualizations from the simulation output, since this requires a
 working version of R and ImageMagick. In order to create flocking
 visualizations, install these packages on your machine, uncomment this
 section of the run script, and re-run the script.
+
+The strongscaling_run_bgq and weakscaling_run_bgq files are the sbatch scripts we used to run our scaling tests. They take a single argument which is the number of nodes they are being run on.
+

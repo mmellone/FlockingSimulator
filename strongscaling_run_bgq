@@ -1,0 +1,97 @@
+#!/bin/bash
+
+DIR=$(pwd)
+PROGRAM="simulator"
+
+# --------------------------
+# ----- Set parameters -----
+# --------------------------
+NODES=1
+if [ "$1" ]; then
+   NODES="$1"
+fi
+TIME=1000
+BIRDS=8192
+SIZE=10000
+
+# ------------------------------
+# ----- 1 pthread per rank -----
+# ------------------------------
+RANKS=$((NODES * 64))
+THREADS=1
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
+
+srun --nodes $NODES --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+
+# -------------------------------
+# ----- 2 pthreads per rank -----
+# -------------------------------
+RANKS=$((NODES * 32))
+THREADS=2
+
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
+
+srun --nodes $NODES --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+
+# -------------------------------
+# ----- 4 pthreads per rank -----
+# -------------------------------
+RANKS=$((NODES * 16))
+THREADS=4
+
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
+
+srun --nodes $NODES --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+
+# -------------------------------
+# ----- 8 pthreads per rank -----
+# -------------------------------
+RANKS=$((NODES * 8))
+THREADS=8
+
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
+
+srun --nodes $NODES --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+
+# --------------------------------
+# ----- 16 pthreads per rank -----
+# --------------------------------
+RANKS=$((NODES * 4))
+THREADS=16
+
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
+
+srun --nodes $NODES --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
+
+
+# --------------------------------
+# ----- 32 pthreads per rank -----
+# --------------------------------
+RANKS=$((NODES * 2))
+THREADS=32
+
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
+
+srun --nodes $NODES --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME 
+
+
+# --------------------------------
+# ----- 64 pthreads per rank -----
+# --------------------------------
+RANKS="$NODES"
+THREADS=64
+
+echo "Running $PROGRAM with"
+echo "  NODES=$NODES, RANKS=$RANKS, THREADS=$THREADS"
+
+srun --nodes $NODES --ntasks $RANKS --overcommit -o strong_scaling_test.log --open-mode=append "$DIR/$PROGRAM" -p $THREADS -b $BIRDS -s $SIZE -t $TIME
