@@ -1,0 +1,38 @@
+We set out in this project with the goal of creating a high performance,
+massively parallel simulation of flocking behavior in birds using an implicit
+representation of the universe. We found that, through a strong scaling study,
+this simulation scales well to many parallel processors, provided that a good
+balance of MPI ranks and pthreads are used. In particular, MPI collective
+operations scaled very well as the total number of compute nodes increased,
+however, sending a large amount of small data packages does not appear to be
+as efficient as sending larger packages of data between fewer ranks. A weak
+scaling study showed that there is still much room for improvement in our update
+algorithm in order to create better performance for very large numbers of birds.
+
+The performance of the position update algorithm can be vastly improved by using
+a better data structure than a simple array to hold the bird data types. In
+particular we want a data structure that makes it easier to find birds that are
+close together position-wise. This could be accomplished using a multidimensional
+binary search tree, where it has been shown that regional searches can be done
+in \(O(kN^{1-1/k})\) time \cite{Lee}. This would be a vast improvement over our
+current \(O(n^2)\) search implementation.
+
+Additionally we could also modify the MPI message passing to only send the
+birds that are required by each MPI rank. Although the collective message passing
+is quite efficient, as we continue to increase the number of simulated agents
+it becomes impractical to keep a copy of every agent in each rank and perform a
+large MPI\_Allgather each iteration.
+
+While this simulation was specifically designed to imitate flocking birds, there
+are many other applications that can make use of a efficient and highly scalable
+simulator like this. For example, the emergent principles of flocking birds can
+be applied to create dynamic visualizations of temporal data evolutions, such as
+stock data \cite{Moere}. The simulation of the interactions between many agents
+can even be used to select songs on an internet radio based on what other people
+are currently listening to \cite{Ibáñez}.
+
+There are many more uses for efficient simulations of emergent flocking behavior.
+Our techniques of using an implicitly defined universe and combining
+an optimal number of pthreads with MPI ranks provide a good base model that, if
+combined with some more advanced data structures and smart message passing, can
+be very effective for many of these uses.
